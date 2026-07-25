@@ -11,7 +11,7 @@ interface Fighter {
   vx: number;
   vy: number;
   hp: number;
-  state: "idle" | "punch" | "kick" | "jump" | "block" | "hit";
+  state: "idle" | "punch" | "kick" | "jump" | "block" | "hit" | "walk";
   animFrame: number;
 }
 
@@ -33,8 +33,8 @@ export default function ArcadeGame() {
     player: Fighter;
     ai: Fighter;
   }>({
-    player: { name: "Harshdeep", color: "#FFC800", x: 60, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
-    ai: { name: "Sarabjeet", color: "#7000E0", x: 220, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
+    player: { name: "Harshdeep", color: "#FFC800", x: 40, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
+    ai: { name: "Sarabjeet", color: "#7000E0", x: 230, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
   });
 
   const startGame = (p: typeof HOSTS[0], o: typeof HOSTS[0]) => {
@@ -43,14 +43,14 @@ export default function ArcadeGame() {
     setWinner(null);
 
     gameState.current = {
-      player: { name: p.name, color: p.color, x: 50, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
+      player: { name: p.name, color: p.color, x: 40, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
       ai: { name: o.name, color: o.color, x: 230, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
     };
 
     setGameStarted(true);
   };
 
-  // Main 60FPS Game Loop
+  // 60FPS Loop with Dynamic Movement & Bounds
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -65,7 +65,22 @@ export default function ArcadeGame() {
       const p = gameState.current.player;
       const ai = gameState.current.ai;
 
-      // Gravity & Physics
+      // Update Player Velocity & Position
+      p.x += p.vx;
+      // Ring Boundaries (300px wide canvas)
+      if (p.x < 10) p.x = 10;
+      if (p.x > ai.x - 20) p.x = ai.x - 20; // Player can't walk past AI
+
+      // AI Basic Movement Tracking (AI moves towards/away from player)
+      const dist = Math.abs(p.x - ai.x);
+      if (dist > 50 && Math.random() > 0.8) {
+        ai.x -= 1.5; // AI steps forward
+      } else if (dist < 30 && Math.random() > 0.85) {
+        ai.x += 2; // AI steps back
+      }
+      if (ai.x > 250) ai.x = 250;
+
+      // Gravity & Jumping Physics
       if (p.y < 120) p.vy += 0.8;
       p.y += p.vy;
       if (p.y >= 120) { p.y = 120; p.vy = 0; if (p.state === "jump") p.state = "idle"; }
@@ -74,34 +89,34 @@ export default function ArcadeGame() {
       ai.y += ai.vy;
       if (ai.y >= 120) { ai.y = 120; ai.vy = 0; if (ai.state === "jump") ai.state = "idle"; }
 
-      // Clear Screen (Octagon Ring Canvas)
+      // Clear Canvas
       ctx.fillStyle = "#09090B";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw Grid Floor / Ring Floor
+      // Draw Ring Floor & Fence
       ctx.fillStyle = "#18181C";
       ctx.fillRect(0, 160, canvas.width, 40);
       ctx.strokeStyle = "#27272A";
       ctx.strokeRect(0, 160, canvas.width, 40);
 
-      // Helper function to draw 8-bit Pixel Fighter Sprites
-      const draw8BitFighter = (f: Fighter, isFacingRight: boolean) => {
+      // Draw Fighter Function
+      const drawFighter = (f: Fighter, isFacingRight: boolean) => {
         ctx.save();
         ctx.translate(f.x, f.y);
 
-        // Shadow
+        // Ground Shadow
         ctx.fillStyle = "rgba(0,0,0,0.5)";
         ctx.beginPath();
         ctx.ellipse(15, 42, 12, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Body Color (Turban/Head & Shorts Accent)
+        // Turban / Head
         ctx.fillStyle = f.color;
-        ctx.fillRect(8, 0, 14, 10); // Head / Turban
+        ctx.fillRect(8, 0, 14, 10);
 
-        // Skin Tone
+        // Face Skin Tone
         ctx.fillStyle = "#E0A96D";
-        ctx.fillRect(10, 10, 10, 8); // Face
+        ctx.fillRect(10, 10, 10, 8);
 
         // MMA Shorts
         ctx.fillStyle = f.color;
@@ -112,40 +127,50 @@ export default function ArcadeGame() {
         ctx.fillRect(10, 36, 4, 8);
         ctx.fillRect(16, 36, 4, 8);
 
-        // Torso / Chest
+        // Torso
         ctx.fillStyle = "#C88A4B";
         ctx.fillRect(8, 18, 14, 10);
 
         // Arms & Actions
         ctx.fillStyle = "#E0A96D";
         if (f.state === "punch") {
-          ctx.fillRect(isFacingRight ? 18 : -8, 18, 16, 5); // Punch Arm Extended
+          ctx.fillRect(isFacingRight ? 18 : -8, 18, 16, 5);
         } else if (f.state === "kick") {
-          ctx.fillStyle = "#E0A96D";
-          ctx.fillRect(isFacingRight ? 18 : -10, 32, 16, 6); // Kick Leg Extended
+          ctx.fillRect(isFacingRight ? 18 : -10, 32, 16, 6);
         } else if (f.state === "block") {
-          ctx.fillRect(isFacingRight ? 14 : 2, 14, 6, 12); // Guarding Arms
+          ctx.fillRect(isFacingRight ? 14 : 2, 14, 6, 12);
         } else {
-          ctx.fillRect(4, 18, 5, 10); // Idle Arms
+          ctx.fillRect(4, 18, 5, 10);
           ctx.fillRect(21, 18, 5, 10);
         }
 
         ctx.restore();
       };
 
-      // Draw Player & AI
-      draw8BitFighter(p, true);
-      draw8BitFighter(ai, false);
+      drawFighter(p, true);
+      drawFighter(ai, false);
 
       animationId = requestAnimationFrame(render);
     };
 
     render();
-
     return () => cancelAnimationFrame(animationId);
   }, [gameStarted]);
 
-  // Action Handlers
+  // Movement Controls
+  const startMove = (dir: "left" | "right") => {
+    const p = gameState.current.player;
+    p.vx = dir === "left" ? -3 : 3;
+    p.state = "walk";
+  };
+
+  const stopMove = () => {
+    const p = gameState.current.player;
+    p.vx = 0;
+    if (p.state === "walk") p.state = "idle";
+  };
+
+  // Attack Handlers
   const handleAction = (action: "punch" | "kick" | "jump" | "block") => {
     const p = gameState.current.player;
     const ai = gameState.current.ai;
@@ -157,10 +182,10 @@ export default function ArcadeGame() {
       p.state = action;
     }
 
-    // Distance calculation for hits
-    const distance = Math.abs(p.x - ai.x);
+    const distance = Math.abs((p.x + 15) - (ai.x + 15));
 
-    if ((action === "punch" || action === "kick") && distance < 45) {
+    // Must be in hitting range (under 40px) to land a strike!
+    if ((action === "punch" || action === "kick") && distance < 40) {
       if (ai.state !== "block") {
         ai.hp = Math.max(0, ai.hp - 12);
         ai.state = "hit";
@@ -173,11 +198,11 @@ export default function ArcadeGame() {
       }
     }
 
-    // AI Counter Attack Logic
+    // AI Reaction
     setTimeout(() => {
-      if (ai.hp > 0 && Math.random() > 0.4) {
-        const dist = Math.abs(p.x - ai.x);
-        if (dist < 45 && p.state !== "block") {
+      const currentDist = Math.abs((p.x + 15) - (ai.x + 15));
+      if (ai.hp > 0 && Math.random() > 0.45 && currentDist < 40) {
+        if (p.state !== "block") {
           p.hp = Math.max(0, p.hp - 10);
           p.state = "hit";
 
@@ -187,14 +212,14 @@ export default function ArcadeGame() {
           }
         }
       }
-      if (p.state !== "jump") p.state = "idle";
+      if (p.state !== "jump" && p.state !== "walk") p.state = "idle";
       if (ai.state !== "jump") ai.state = "idle";
     }, 300);
   };
 
   return (
     <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B] text-[#FAFAFA] font-mono select-none">
-      <main className="w-full max-w-[440px] flex flex-col gap-5">
+      <main className="w-full max-w-[440px] flex flex-col gap-4">
         
         {/* Header */}
         <header className="flex items-center justify-between py-2 border-b border-[#27272A]">
@@ -282,15 +307,15 @@ export default function ArcadeGame() {
           </div>
         )}
 
-        {/* 60FPS CANVAS ARENA */}
+        {/* 60FPS CANVAS ARENA WITH FULL MOVEMENT CONTROLS */}
         {gameStarted && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             
             {/* Health Bars */}
             <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-4 flex flex-col gap-2">
               <div className="flex justify-between text-xs font-bold">
                 <span style={{ color: playerHost.color }}>{playerHost.name}</span>
-                <span style={{ color: opponentHost.color }}>{opponentHost.name}</span>
+                <span style={{ color: opponentHost.color }}>{opponentHost.color}</span>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1 bg-[#09090B] h-3 rounded-full overflow-hidden border border-[#27272A]">
@@ -318,32 +343,59 @@ export default function ArcadeGame() {
               />
             </div>
 
-            {/* Arcade Controls */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => handleAction("punch")}
-                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-              >
-                👊 PUNCH
-              </button>
-              <button
-                onClick={() => handleAction("kick")}
-                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-              >
-                🦶 KICK
-              </button>
-              <button
-                onClick={() => handleAction("jump")}
-                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-              >
-                🦘 JUMP
-              </button>
-              <button
-                onClick={() => handleAction("block")}
-                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-[#FFC800] active:scale-95"
-              >
-                🛡️ BLOCK
-              </button>
+            {/* ARCADE D-PAD & ACTION CONTROLS */}
+            <div className="flex gap-2">
+              
+              {/* D-PAD Movement (Hold or Tap to Walk) */}
+              <div className="flex-1 grid grid-cols-2 gap-1.5 bg-[#141417] border border-[#27272A] p-2 rounded-2xl">
+                <button
+                  onMouseDown={() => startMove("left")}
+                  onMouseUp={stopMove}
+                  onTouchStart={() => startMove("left")}
+                  onTouchEnd={stopMove}
+                  className="py-4 bg-[#09090B] border border-[#27272A] active:bg-[#FFC800] active:text-black rounded-xl text-xs font-bold text-white flex items-center justify-center"
+                >
+                  ◀ LEFT
+                </button>
+                <button
+                  onMouseDown={() => startMove("right")}
+                  onMouseUp={stopMove}
+                  onTouchStart={() => startMove("right")}
+                  onTouchEnd={stopMove}
+                  className="py-4 bg-[#09090B] border border-[#27272A] active:bg-[#FFC800] active:text-black rounded-xl text-xs font-bold text-white flex items-center justify-center"
+                >
+                  RIGHT ▶
+                </button>
+              </div>
+
+              {/* Action Combat Buttons */}
+              <div className="flex-1 grid grid-cols-2 gap-1.5 bg-[#141417] border border-[#27272A] p-2 rounded-2xl">
+                <button
+                  onClick={() => handleAction("punch")}
+                  className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
+                >
+                  👊 PUNCH
+                </button>
+                <button
+                  onClick={() => handleAction("kick")}
+                  className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
+                >
+                  🦶 KICK
+                </button>
+                <button
+                  onClick={() => handleAction("jump")}
+                  className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
+                >
+                  🦘 JUMP
+                </button>
+                <button
+                  onClick={() => handleAction("block")}
+                  className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-[#FFC800] active:scale-95"
+                >
+                  🛡️ BLOCK
+                </button>
+              </div>
+
             </div>
 
           </div>
