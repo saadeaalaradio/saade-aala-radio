@@ -40,7 +40,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B]">
+    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B] text-[#FAFAFA]">
       <main className="w-full max-w-[440px] flex flex-col gap-6">
         
         {/* Header Navigation */}
@@ -166,6 +166,63 @@ export default function Home() {
               <span>Drum Roll</span>
               <span className="text-[#FFC800] text-[10px]">▶</span>
             </button>
+          </div>
+        </section>
+
+        {/* Social & Media Hub Block */}
+        <section className="flex flex-col gap-3">
+          <div className="text-xs font-semibold text-[#A1A1AA] tracking-wider">
+            CONNECT & SUBSCRIBE
+          </div>
+
+          <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-4 flex flex-col gap-3">
+            <a
+              href="https://www.youtube.com/@SaadeAalaRadio"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#FF0000] hover:bg-[#FF0000]/10 transition-all active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">📺</span>
+                <div>
+                  <div className="text-xs font-bold text-white">YouTube Channel</div>
+                  <div className="text-[10px] text-[#A1A1AA]">@SaadeAalaRadio</div>
+                </div>
+              </div>
+              <span className="text-xs text-[#A1A1AA]">Subscribe →</span>
+            </a>
+
+            <a
+              href="https://open.spotify.com/show/4O3... (or your show link)"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#1DB954] hover:bg-[#1DB954]/10 transition-all active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🎧</span>
+                <div>
+                  <div className="text-xs font-bold text-white">Spotify Podcast</div>
+                  <div className="text-[10px] text-[#A1A1AA]">Listen on Spotify</div>
+                </div>
+              </div>
+              <span className="text-xs text-[#A1A1AA]">Listen →</span>
+            </a>
+
+            <a
+              href="https://www.instagram.com/harshdeep243"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#FFC800] hover:bg-[#FFC800]/10 transition-all active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">📷</span>
+                <div>
+                  <div className="text-xs font-bold text-white">Official Instagram</div>
+                  <div className="text-[10px] text-[#A1A1AA]">Clips & Behind the Scenes</div>
+                </div>
+              </div>
+              <span className="text-xs text-[#A1A1AA]">Follow →</span>
+            </a>
           </div>
         </section>
 
