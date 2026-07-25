@@ -3,6 +3,17 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
+interface Host {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  avatarLetter: string;
+  instagram: string;
+  snapchat: string;
+  accentColor: string;
+}
+
 interface EpisodeData {
   title: string;
   pubDate: string;
@@ -10,10 +21,44 @@ interface EpisodeData {
   embedUrl?: string;
 }
 
+const hostsData: Host[] = [
+  {
+    id: "harshdeep",
+    name: "Harshdeep Singh",
+    role: "Founder & Co-Host",
+    bio: "Chaotic stories & daily rants.",
+    avatarLetter: "H",
+    instagram: "https://www.instagram.com/harshdeep243",
+    snapchat: "https://www.snapchat.com/@harshdeep_243",
+    accentColor: "#FFC800",
+  },
+  {
+    id: "sarabjeet",
+    name: "Sarabjeet Singh",
+    role: "Co-Host",
+    bio: "Master of comebacks & banter.",
+    avatarLetter: "S",
+    instagram: "https://www.instagram.com/sarabjeet_00001",
+    snapchat: "https://www.snapchat.com/@sarabjeet0033",
+    accentColor: "#7000E0",
+  },
+  {
+    id: "sandeep",
+    name: "Sandeep Singh",
+    role: "Co-Host",
+    bio: "Wild card & hot takes.",
+    avatarLetter: "S",
+    instagram: "https://www.instagram.com/saandeep_ambala_official",
+    snapchat: "https://www.snapchat.com/@puadh_aale",
+    accentColor: "#FF4500",
+  },
+];
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"spotify" | "youtube">("youtube");
   const [episode, setEpisode] = useState<EpisodeData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeHost, setActiveHost] = useState<Host>(hostsData[0]);
 
   // Latest featured YouTube video ID
   const latestYouTubeVideoId = "ES6ONFKyEgM";
@@ -57,7 +102,7 @@ export default function Home() {
             href="/team"
             className="text-[10px] font-semibold tracking-wider text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5 hover:border-[#FFC800] hover:text-[#FFC800] transition-colors"
           >
-            MEET THE TEAM →
+            FULL TEAM →
           </Link>
         </header>
 
@@ -127,6 +172,113 @@ export default function Home() {
           </div>
         </section>
 
+        {/* 🎭 Interactive 3-Host Lineup Card */}
+        <section className="flex flex-col gap-3">
+          <div className="flex justify-between items-center text-xs font-semibold text-[#A1A1AA] tracking-wider">
+            <span>MEET THE HOSTS</span>
+            <span className="text-[#FFC800]">TAP A HOST</span>
+          </div>
+
+          <div className="relative overflow-hidden bg-[#141417] border border-[#27272A] rounded-2xl p-5 flex flex-col gap-5">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#FFC800]/10 blur-3xl rounded-full pointer-events-none" />
+
+            {/* Host Standing Stage */}
+            <div className="flex items-end justify-center gap-3 pt-2 pb-1">
+              {hostsData.map((host) => {
+                const isSelected = activeHost.id === host.id;
+                return (
+                  <button
+                    key={host.id}
+                    onClick={() => setActiveHost(host)}
+                    onMouseEnter={() => setActiveHost(host)}
+                    className={`relative flex flex-col items-center transition-all duration-300 transform outline-none cursor-pointer ${
+                      isSelected
+                        ? "scale-110 -translate-y-2 z-10"
+                        : "scale-90 opacity-60 hover:opacity-100 z-0"
+                    }`}
+                  >
+                    {/* Active Host Glow Circle */}
+                    <div
+                      className={`w-20 h-28 rounded-2xl flex flex-col items-center justify-center border-2 transition-all duration-300 shadow-xl ${
+                        isSelected
+                          ? "border-[#FFC800] bg-gradient-to-b from-white/10 to-[#09090B]"
+                          : "border-[#27272A] bg-[#09090B]"
+                      }`}
+                      style={{
+                        borderColor: isSelected ? host.accentColor : "#27272A",
+                      }}
+                    >
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-white shadow-md mb-1"
+                        style={{
+                          backgroundColor: host.accentColor,
+                        }}
+                      >
+                        {host.avatarLetter}
+                      </div>
+                      <span className="text-[10px] font-bold text-white tracking-wide truncate max-w-[70px]">
+                        {host.name.split(" ")[0]}
+                      </span>
+                    </div>
+
+                    {/* Stage Shadow / Spotlight */}
+                    {isSelected && (
+                      <div
+                        className="w-16 h-2 rounded-full blur-sm mt-1 animate-pulse"
+                        style={{ backgroundColor: host.accentColor }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected Host Info Panel */}
+            <div className="bg-[#09090B] border border-[#27272A] rounded-xl p-4 flex flex-col gap-2.5 transition-all duration-300">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-sm font-bold text-white leading-tight">
+                    {activeHost.name}
+                  </h3>
+                  <p
+                    className="text-[11px] font-semibold mt-0.5"
+                    style={{ color: activeHost.accentColor }}
+                  >
+                    {activeHost.role}
+                  </p>
+                </div>
+                <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full text-[#A1A1AA]">
+                  ACTIVE
+                </span>
+              </div>
+
+              <p className="text-xs text-[#A1A1AA] leading-relaxed">
+                {activeHost.bio}
+              </p>
+
+              {/* Host Socials */}
+              <div className="flex items-center gap-3 pt-2 border-t border-[#27272A]">
+                <a
+                  href={activeHost.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-semibold text-[#A1A1AA] hover:text-[#FFC800] transition-colors"
+                >
+                  📷 Instagram →
+                </a>
+                <a
+                  href={activeHost.snapchat}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-semibold text-[#A1A1AA] hover:text-[#FFC800] transition-colors"
+                >
+                  👻 Snapchat →
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Fan Soundboard */}
         <section className="flex flex-col gap-3">
           <div className="flex justify-between items-center text-xs font-semibold text-[#A1A1AA] tracking-wider">
@@ -169,7 +321,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Social & Media Hub Block with All 6 Brand Logos */}
+        {/* Social & Media Hub Block with Brand Logos */}
         <section className="flex flex-col gap-3">
           <div className="text-xs font-semibold text-[#A1A1AA] tracking-wider">
             CONNECT & SUBSCRIBE
