@@ -3,112 +3,193 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 
-interface HostFighter {
-  id: string;
+interface Fighter {
   name: string;
   color: string;
-  avatar: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  hp: number;
+  state: "idle" | "punch" | "kick" | "jump" | "block" | "hit";
+  animFrame: number;
 }
 
-const hosts: HostFighter[] = [
-  { id: "harshdeep", name: "Harshdeep", color: "#FFC800", avatar: "H" },
-  { id: "sarabjeet", name: "Sarabjeet", color: "#7000E0", avatar: "S" },
-  { id: "sandeep", name: "Sandeep", color: "#FF4500", avatar: "S" },
+const HOSTS = [
+  { id: "harshdeep", name: "Harshdeep", color: "#FFC800" },
+  { id: "sarabjeet", name: "Sarabjeet", color: "#7000E0" },
+  { id: "sandeep", name: "Sandeep", color: "#FF4500" },
 ];
 
-export default function GamePage() {
-  const [player, setPlayer] = useState<HostFighter | null>(null);
-  const [opponent, setOpponent] = useState<HostFighter | null>(null);
-  const [gameState, setGameState] = useState<"select" | "playing" | "gameover">("select");
+export default function ArcadeGame() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const [playerScore, setPlayerScore] = useState(0);
-  const [aiScore, setAiScore] = useState(0);
-  const [winnerMessage, setWinnerMessage] = useState("");
-  const [actionLog, setActionLog] = useState("Tap a move to attack!");
+  const [playerHost, setPlayerHost] = useState(HOSTS[0]);
+  const [opponentHost, setOpponentHost] = useState(HOSTS[1]);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [winner, setWinner] = useState<string | null>(null);
 
-  const [isPlayerJumping, setIsPlayerJumping] = useState(false);
-  const [isPlayerBlocking, setIsPlayerBlocking] = useState(false);
+  const gameState = useRef<{
+    player: Fighter;
+    ai: Fighter;
+  }>({
+    player: { name: "Harshdeep", color: "#FFC800", x: 60, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
+    ai: { name: "Sarabjeet", color: "#7000E0", x: 220, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
+  });
 
-  // Start the fight
-  const startGame = (p: HostFighter, o: HostFighter) => {
-    setPlayer(p);
-    setOpponent(o);
-    setPlayerScore(0);
-    setAiScore(0);
-    setWinnerMessage("");
-    setGameState("playing");
-    setActionLog("Fight Started! First to 8 hits wins!");
+  const startGame = (p: typeof HOSTS[0], o: typeof HOSTS[0]) => {
+    setPlayerHost(p);
+    setOpponentHost(o);
+    setWinner(null);
+
+    gameState.current = {
+      player: { name: p.name, color: p.color, x: 50, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
+      ai: { name: o.name, color: o.color, x: 230, y: 120, vx: 0, vy: 0, hp: 100, state: "idle", animFrame: 0 },
+    };
+
+    setGameStarted(true);
   };
 
-  // AI Attack Trigger
-  const triggerAiCounter = (moveName: string, isJumpAttack = false) => {
-    if (gameState !== "playing") return;
+  // Main 60FPS Game Loop
+  useEffect(() => {
+    if (!gameStarted) return;
 
-    // AI logic: 35% chance AI blocks if player isn't jumping, otherwise AI gets hit or hits back
-    const aiRoll = Math.random();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    if (isPlayerBlocking) {
-      setActionLog(`🛡️ You blocked ${opponent?.name}'s attack! No damage.`);
-      setIsPlayerBlocking(false);
-      return;
-    }
+    let animationId: number;
 
-    if (aiRoll < 0.3 && !isJumpAttack) {
-      setActionLog(`🛡️ ${opponent?.name} blocked your ${moveName}!`);
+    const render = () => {
+      const p = gameState.current.player;
+      const ai = gameState.current.ai;
+
+      // Gravity & Physics
+      if (p.y < 120) p.vy += 0.8;
+      p.y += p.vy;
+      if (p.y >= 120) { p.y = 120; p.vy = 0; if (p.state === "jump") p.state = "idle"; }
+
+      if (ai.y < 120) ai.vy += 0.8;
+      ai.y += ai.vy;
+      if (ai.y >= 120) { ai.y = 120; ai.vy = 0; if (ai.state === "jump") ai.state = "idle"; }
+
+      // Clear Screen (Octagon Ring Canvas)
+      ctx.fillStyle = "#09090B";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Grid Floor / Ring Floor
+      ctx.fillStyle = "#18181C";
+      ctx.fillRect(0, 160, canvas.width, 40);
+      ctx.strokeStyle = "#27272A";
+      ctx.strokeRect(0, 160, canvas.width, 40);
+
+      // Helper function to draw 8-bit Pixel Fighter Sprites
+      const draw8BitFighter = (f: Fighter, isFacingRight: boolean) => {
+        ctx.save();
+        ctx.translate(f.x, f.y);
+
+        // Shadow
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.beginPath();
+        ctx.ellipse(15, 42, 12, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body Color (Turban/Head & Shorts Accent)
+        ctx.fillStyle = f.color;
+        ctx.fillRect(8, 0, 14, 10); // Head / Turban
+
+        // Skin Tone
+        ctx.fillStyle = "#E0A96D";
+        ctx.fillRect(10, 10, 10, 8); // Face
+
+        // MMA Shorts
+        ctx.fillStyle = f.color;
+        ctx.fillRect(8, 26, 14, 10);
+
+        // Legs
+        ctx.fillStyle = "#E0A96D";
+        ctx.fillRect(10, 36, 4, 8);
+        ctx.fillRect(16, 36, 4, 8);
+
+        // Torso / Chest
+        ctx.fillStyle = "#C88A4B";
+        ctx.fillRect(8, 18, 14, 10);
+
+        // Arms & Actions
+        ctx.fillStyle = "#E0A96D";
+        if (f.state === "punch") {
+          ctx.fillRect(isFacingRight ? 18 : -8, 18, 16, 5); // Punch Arm Extended
+        } else if (f.state === "kick") {
+          ctx.fillStyle = "#E0A96D";
+          ctx.fillRect(isFacingRight ? 18 : -10, 32, 16, 6); // Kick Leg Extended
+        } else if (f.state === "block") {
+          ctx.fillRect(isFacingRight ? 14 : 2, 14, 6, 12); // Guarding Arms
+        } else {
+          ctx.fillRect(4, 18, 5, 10); // Idle Arms
+          ctx.fillRect(21, 18, 5, 10);
+        }
+
+        ctx.restore();
+      };
+
+      // Draw Player & AI
+      draw8BitFighter(p, true);
+      draw8BitFighter(ai, false);
+
+      animationId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => cancelAnimationFrame(animationId);
+  }, [gameStarted]);
+
+  // Action Handlers
+  const handleAction = (action: "punch" | "kick" | "jump" | "block") => {
+    const p = gameState.current.player;
+    const ai = gameState.current.ai;
+
+    if (action === "jump" && p.y === 120) {
+      p.vy = -10;
+      p.state = "jump";
     } else {
-      // Player Lands Hit
-      const nextPlayerScore = playerScore + 1;
-      setPlayerScore(nextPlayerScore);
-      setActionLog(`💥 You landed a ${moveName} on ${opponent?.name}!`);
+      p.state = action;
+    }
 
-      if (nextPlayerScore >= 8) {
-        setWinnerMessage(`🎉 ${player?.name} KNOCKED OUT ${opponent?.name}!`);
-        setGameState("gameover");
-        return;
+    // Distance calculation for hits
+    const distance = Math.abs(p.x - ai.x);
+
+    if ((action === "punch" || action === "kick") && distance < 45) {
+      if (ai.state !== "block") {
+        ai.hp = Math.max(0, ai.hp - 12);
+        ai.state = "hit";
+
+        if (ai.hp <= 0) {
+          setWinner(`${playerHost.name} KNOCKED OUT ${opponentHost.name}!`);
+          setGameStarted(false);
+          return;
+        }
       }
     }
 
-    // AI Counter Attack (50% chance AI hits back)
+    // AI Counter Attack Logic
     setTimeout(() => {
-      if (Math.random() > 0.45 && gameState === "playing") {
-        setAiScore((prev) => {
-          const newAiScore = prev + 1;
-          if (newAiScore >= 8) {
-            setWinnerMessage(`💀 ${opponent?.name} DEFEATED ${player?.name}!`);
-            setGameState("gameover");
-          } else {
-            setActionLog(`⚠️ ${opponent?.name} hit you back with a counter!`);
+      if (ai.hp > 0 && Math.random() > 0.4) {
+        const dist = Math.abs(p.x - ai.x);
+        if (dist < 45 && p.state !== "block") {
+          p.hp = Math.max(0, p.hp - 10);
+          p.state = "hit";
+
+          if (p.hp <= 0) {
+            setWinner(`${opponentHost.name} DEFEATED ${playerHost.name}!`);
+            setGameStarted(false);
           }
-          return newAiScore;
-        });
+        }
       }
-    }, 400);
-  };
-
-  const handlePunch = () => triggerAiCounter("Punch");
-  const handleKick = () => triggerAiCounter("Kick");
-  
-  const handleJump = () => {
-    setIsPlayerJumping(true);
-    setActionLog("🦘 You jumped high into the air!");
-    setTimeout(() => setIsPlayerJumping(false), 800);
-  };
-
-  const handleJumpPunch = () => {
-    if (!isPlayerJumping) setIsPlayerJumping(true);
-    triggerAiCounter("Flying Jump Punch", true);
-    setTimeout(() => setIsPlayerJumping(false), 800);
-  };
-
-  const handleJumpKick = () => {
-    if (!isPlayerJumping) setIsPlayerJumping(true);
-    triggerAiCounter("Flying Jump Kick", true);
-    setTimeout(() => setIsPlayerJumping(false), 800);
-  };
-
-  const handleBlock = () => {
-    setIsPlayerBlocking(true);
-    setActionLog("🛡️ Guard Up! Blocking incoming attack...");
+      if (p.state !== "jump") p.state = "idle";
+      if (ai.state !== "jump") ai.state = "idle";
+    }, 300);
   };
 
   return (
@@ -119,43 +200,38 @@ export default function GamePage() {
         <header className="flex items-center justify-between py-2 border-b border-[#27272A]">
           <Link href="/" className="flex items-center gap-1.5 no-underline">
             <span className="text-base font-bold text-[#FFC800]">SAADE AALA</span>
-            <span className="text-base text-white">MMA</span>
+            <span className="text-base text-white">ARCADE</span>
           </Link>
           <Link
             href="/"
             className="text-[10px] font-bold text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5"
           >
-            ← EXIT GAME
+            ← EXIT
           </Link>
         </header>
 
-        {/* CHARACTER SELECTION SCREEN */}
-        {gameState === "select" && (
+        {/* CHARACTER SELECTION */}
+        {!gameStarted && !winner && (
           <section className="flex flex-col gap-4 bg-[#141417] border border-[#27272A] p-5 rounded-2xl text-center">
             <div className="inline-block mx-auto px-3 py-1 rounded-full text-[10px] font-bold text-[#FFC800] bg-[#FFC800]/10 border border-[#FFC800]/20">
-              🎮 8-BIT MMA ARCADE
+              🥊 BENCHMARK MMA EDITION
             </div>
 
-            <h1 className="text-base font-bold text-white">Select Fighter & Opponent</h1>
+            <h1 className="text-sm font-bold text-white">Select Fighter & Opponent</h1>
 
-            <div className="flex flex-col gap-3 my-2">
-              <span className="text-xs text-[#A1A1AA]">Choose Your Host:</span>
+            <div className="flex flex-col gap-2">
+              <span className="text-xs text-[#A1A1AA]">Your Host:</span>
               <div className="grid grid-cols-3 gap-2">
-                {hosts.map((h) => (
+                {HOSTS.map((h) => (
                   <button
                     key={h.id}
-                    onClick={() => setPlayer(h)}
+                    onClick={() => setPlayerHost(h)}
                     className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      player?.id === h.id
-                        ? "border-[#FFC800] bg-[#FFC800]/20 scale-105"
-                        : "border-[#27272A] bg-[#09090B]"
+                      playerHost.id === h.id ? "border-[#FFC800] bg-[#FFC800]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
                     }`}
                   >
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white"
-                      style={{ backgroundColor: h.color }}
-                    >
-                      {h.avatar}
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white" style={{ backgroundColor: h.color }}>
+                      {h.name.charAt(0)}
                     </div>
                     <span className="text-[10px] font-bold text-white">{h.name}</span>
                   </button>
@@ -163,163 +239,112 @@ export default function GamePage() {
               </div>
             </div>
 
-            {player && (
-              <div className="flex flex-col gap-3 my-2">
-                <span className="text-xs text-[#A1A1AA]">Choose AI Opponent:</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {hosts
-                    .filter((h) => h.id !== player.id)
-                    .map((h) => (
-                      <button
-                        key={h.id}
-                        onClick={() => setOpponent(h)}
-                        className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                          opponent?.id === h.id
-                            ? "border-[#FF0000] bg-[#FF0000]/20 scale-105"
-                            : "border-[#27272A] bg-[#09090B]"
-                        }`}
-                      >
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white"
-                          style={{ backgroundColor: h.color }}
-                        >
-                          {h.avatar}
-                        </div>
-                        <span className="text-[10px] font-bold text-white">{h.name}</span>
-                      </button>
-                    ))}
-                </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-xs text-[#A1A1AA]">AI Opponent:</span>
+              <div className="grid grid-cols-3 gap-2">
+                {HOSTS.filter(h => h.id !== playerHost.id).map((h) => (
+                  <button
+                    key={h.id}
+                    onClick={() => setOpponentHost(h)}
+                    className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
+                      opponentHost.id === h.id ? "border-[#FF0000] bg-[#FF0000]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white" style={{ backgroundColor: h.color }}>
+                      {h.name.charAt(0)}
+                    </div>
+                    <span className="text-[10px] font-bold text-white">{h.name}</span>
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
-            {player && opponent && (
-              <button
-                onClick={() => startGame(player, opponent)}
-                className="mt-3 w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-lg active:scale-95 transition-transform"
-              >
-                ⚔️ START MMA FIGHT
-              </button>
-            )}
+            <button
+              onClick={() => startGame(playerHost, opponentHost)}
+              className="mt-2 w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-lg active:scale-95 transition-transform"
+            >
+              ⚔️ ENTER OCTAGON
+            </button>
           </section>
         )}
 
-        {/* FIGHTING ARENA SCREEN */}
-        {(gameState === "playing" || gameState === "gameover") && (
+        {/* WINNER SCREEN */}
+        {winner && (
+          <div className="bg-[#141417] border-2 border-[#FFC800] p-6 rounded-2xl text-center flex flex-col gap-4">
+            <span className="text-2xl">🏆</span>
+            <h2 className="text-sm font-extrabold text-white">{winner}</h2>
+            <button
+              onClick={() => setWinner(null)}
+              className="w-full py-3 bg-[#FFC800] text-black font-bold text-xs rounded-xl"
+            >
+              🔄 FIGHT AGAIN
+            </button>
+          </div>
+        )}
+
+        {/* 60FPS CANVAS ARENA */}
+        {gameStarted && (
           <div className="flex flex-col gap-4">
             
-            {/* Scoreboard */}
-            <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-4 flex justify-between items-center text-xs">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-[#FFC800]">{player?.name}</span>
-                <span className="bg-[#FFC800]/20 border border-[#FFC800] text-[#FFC800] px-2 py-0.5 rounded-md font-bold">
-                  {playerScore} / 8
-                </span>
+            {/* Health Bars */}
+            <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-4 flex flex-col gap-2">
+              <div className="flex justify-between text-xs font-bold">
+                <span style={{ color: playerHost.color }}>{playerHost.name}</span>
+                <span style={{ color: opponentHost.color }}>{opponentHost.name}</span>
               </div>
-              <span className="text-[10px] text-[#A1A1AA]">VS</span>
-              <div className="flex items-center gap-2">
-                <span className="bg-[#FF0000]/20 border border-[#FF0000] text-[#FF0000] px-2 py-0.5 rounded-md font-bold">
-                  {aiScore} / 8
-                </span>
-                <span className="font-bold text-[#FF0000]">{opponent?.name}</span>
+              <div className="flex gap-2">
+                <div className="flex-1 bg-[#09090B] h-3 rounded-full overflow-hidden border border-[#27272A]">
+                  <div
+                    className="h-full transition-all duration-200"
+                    style={{ width: `${gameState.current.player.hp}%`, backgroundColor: playerHost.color }}
+                  />
+                </div>
+                <div className="flex-1 bg-[#09090B] h-3 rounded-full overflow-hidden border border-[#27272A]">
+                  <div
+                    className="h-full transition-all duration-200"
+                    style={{ width: `${gameState.current.ai.hp}%`, backgroundColor: opponentHost.color }}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* 8-Bit Canvas Arena Stage */}
-            <div className="relative w-full h-48 bg-gradient-to-b from-[#09090B] to-[#18181C] border-2 border-[#27272A] rounded-2xl overflow-hidden flex items-end justify-between px-8 pb-4 shadow-2xl">
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[9px] text-[#A1A1AA] bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                OCTAGON ARENA
-              </div>
+            {/* Canvas Viewport */}
+            <div className="relative w-full aspect-[4/3] bg-black rounded-2xl border-2 border-[#27272A] overflow-hidden flex items-center justify-center shadow-2xl">
+              <canvas
+                ref={canvasRef}
+                width={300}
+                height={200}
+                className="w-full h-full object-cover"
+              />
+            </div>
 
-              {/* Player Pixel Avatar */}
-              <div
-                className={`flex flex-col items-center transition-all duration-200 ${
-                  isPlayerJumping ? "-translate-y-12" : "translate-y-0"
-                }`}
+            {/* Arcade Controls */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleAction("punch")}
+                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
               >
-                <div
-                  className="w-12 h-16 rounded-xl border-2 border-white flex flex-col items-center justify-center font-bold text-white shadow-lg"
-                  style={{ backgroundColor: player?.color }}
-                >
-                  <span className="text-xs">👊</span>
-                  <span className="text-xs">{player?.avatar}</span>
-                </div>
-                <span className="text-[9px] font-bold text-[#FFC800] mt-1">{player?.name}</span>
-              </div>
-
-              {/* AI Opponent Pixel Avatar */}
-              <div className="flex flex-col items-center">
-                <div
-                  className="w-12 h-16 rounded-xl border-2 border-white flex flex-col items-center justify-center font-bold text-white shadow-lg"
-                  style={{ backgroundColor: opponent?.color }}
-                >
-                  <span className="text-xs">🥊</span>
-                  <span className="text-xs">{opponent?.avatar}</span>
-                </div>
-                <span className="text-[9px] font-bold text-[#FF0000] mt-1">{opponent?.name}</span>
-              </div>
+                👊 PUNCH
+              </button>
+              <button
+                onClick={() => handleAction("kick")}
+                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
+              >
+                🦶 KICK
+              </button>
+              <button
+                onClick={() => handleAction("jump")}
+                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
+              >
+                🦘 JUMP
+              </button>
+              <button
+                onClick={() => handleAction("block")}
+                className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-[#FFC800] active:scale-95"
+              >
+                🛡️ BLOCK
+              </button>
             </div>
-
-            {/* Action Log Box */}
-            <div className="bg-[#09090B] border border-[#27272A] rounded-xl p-3 text-center text-xs text-[#FFC800] font-semibold min-h-[44px] flex items-center justify-center">
-              {actionLog}
-            </div>
-
-            {/* Game Over Screen Overlay */}
-            {gameState === "gameover" && (
-              <div className="bg-[#141417] border-2 border-[#FFC800] p-5 rounded-2xl text-center flex flex-col gap-3">
-                <h2 className="text-sm font-extrabold text-white leading-relaxed">
-                  {winnerMessage}
-                </h2>
-                <button
-                  onClick={() => setGameState("select")}
-                  className="w-full py-2.5 bg-[#FFC800] text-black font-bold text-xs rounded-xl"
-                >
-                  🔄 PLAY AGAIN
-                </button>
-              </div>
-            )}
-
-            {/* Arcade Controls Grid */}
-            {gameState === "playing" && (
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={handlePunch}
-                  className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                >
-                  👊 PUNCH
-                </button>
-                <button
-                  onClick={handleKick}
-                  className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                >
-                  🦶 KICK
-                </button>
-                <button
-                  onClick={handleJump}
-                  className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                >
-                  🦘 JUMP
-                </button>
-                <button
-                  onClick={handleJumpPunch}
-                  className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                >
-                  💥 JUMP PUNCH
-                </button>
-                <button
-                  onClick={handleJumpKick}
-                  className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                >
-                  💥 JUMP KICK
-                </button>
-                <button
-                  onClick={handleBlock}
-                  className="py-3 bg-[#141417] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-[#FFC800] active:scale-95"
-                >
-                  🛡️ BLOCK
-                </button>
-              </div>
-            )}
 
           </div>
         )}
