@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 interface EpisodeData {
   title: string;
@@ -15,8 +15,8 @@ export default function Home() {
   const [episode, setEpisode] = useState<EpisodeData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Latest featured YouTube video from Saade Aala Radio channel
-  const latestYouTubeVideoId = "ES6ONFKyEgM"; 
+  // Latest featured YouTube video ID
+  const latestYouTubeVideoId = "ES6ONFKyEgM";
 
   useEffect(() => {
     async function loadLatestEpisode() {
@@ -39,7 +39,11 @@ export default function Home() {
     alert(`Playing sound effect: ${soundName}`);
   };
 
-{/* Header Navigation */}
+  return (
+    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B]">
+      <main className="w-full max-w-[440px] flex flex-col gap-6">
+        
+        {/* Header Navigation */}
         <header className="flex items-center justify-between py-2">
           <div className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-[#FFC800]">
