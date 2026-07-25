@@ -6,21 +6,26 @@ interface Host {
   name: string;
   role: string;
   bio: string;
-  image?: string;
   instagram?: string;
 }
 
 const teamMembers: Host[] = [
   {
     name: "Harshdeep Singh",
-    role: "Host & Creator",
+    role: "Founder & Co-Host",
     bio: "Bringing the chaotic stories, unfiltered commentary, and daily rants to Saade Aala Radio.",
     instagram: "https://instagram.com",
   },
   {
-    name: "Co-Host / Guest",
-    role: "Co-Host & Producer",
-    bio: "Keeping the energy high and managing the soundboard chaos behind the mic.",
+    name: "Sarabjeet Singh",
+    role: "Co-Host",
+    bio: "Master of comic timing, quick comebacks, and keeping the banter rolling.",
+    instagram: "https://instagram.com",
+  },
+  {
+    name: "Sandeep Singh",
+    role: "Co-Host",
+    bio: "The wild card of the group bringing unexpected roasts and unfiltered hot takes.",
     instagram: "https://instagram.com",
   },
 ];
@@ -56,23 +61,23 @@ export default function TeamPage() {
             🎙️ THE VOICES
           </div>
           
-          <h1 className="text-xl font-bold text-white mb-2">Meet the Team</h1>
+          <h1 className="text-xl font-bold text-white mb-2">Meet the Squad</h1>
           <p className="text-xs text-[#A1A1AA] leading-relaxed">
-            The minds behind the roasts, late-night thoughts, and unfiltered conversations on Saade Aala Radio.
+            The minds behind the roasts, late-night thoughts, and unfiltered Punjabi comedy on Saade Aala Radio.
           </p>
         </section>
 
-        {/* Team List */}
+        {/* Team Cards List */}
         <section className="flex flex-col gap-4">
           {teamMembers.map((member, index) => (
             <div
               key={index}
-              className="relative overflow-hidden bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-3 transition-all hover:border-[#7000E0]/50"
+              className="relative overflow-hidden bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-3 transition-all hover:border-[#FFC800]/50"
             >
               <div className="flex items-center gap-4">
-                {/* Profile Placeholder / Avatar */}
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#7000E0] to-[#FFC800] p-[2px] flex-shrink-0">
-                  <div className="w-full h-full bg-[#09090B] rounded-[14px] flex items-center justify-center text-lg font-bold text-white">
+                {/* Profile Avatar Badge */}
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7000E0] to-[#FFC800] p-[2px] flex-shrink-0">
+                  <div className="w-full h-full bg-[#09090B] rounded-[14px] flex items-center justify-center text-base font-bold text-[#FFC800]">
                     {member.name.charAt(0)}
                   </div>
                 </div>
@@ -106,7 +111,7 @@ export default function TeamPage() {
           ))}
         </section>
 
-        {/* Bottom Navigation Link */}
+        {/* Bottom Navigation */}
         <div className="text-center pt-2">
           <Link
             href="/"
