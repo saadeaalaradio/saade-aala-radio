@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  // Replace this placeholder RSS feed URL with your actual Spotify/Podcast RSS Feed URL
-  const PODCAST_RSS_URL = "https://anchor.fm/s/example/podcast/rss";
+  const PODCAST_RSS_URL = "https://anchor.fm/s/e8ade3f8/podcast/rss";
 
   try {
-    // We use rss2json as a lightweight parser for public RSS feeds
     const res = await fetch(
       `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(
         PODCAST_RSS_URL
@@ -15,12 +13,21 @@ export async function GET() {
 
     if (data.status === "ok" && data.items.length > 0) {
       const latestEpisode = data.items[0];
+
+      // Extract Spotify Episode ID if available in guid/link
+      let spotifyEmbedUrl = "";
+      if (latestEpisode.guid) {
+        spotifyEmbedUrl = `https://open.spotify.com/embed/episode/${latestEpisode.guid.split("/").pop()}`;
+      } else if (latestEpisode.link) {
+        spotifyEmbedUrl = latestEpisode.link.replace("spotify.com/episode/", "spotify.com/embed/episode/");
+      }
+
       return NextResponse.json({
         title: latestEpisode.title,
         pubDate: latestEpisode.pubDate,
         link: latestEpisode.link,
         description: latestEpisode.description,
-        guid: latestEpisode.guid,
+        embedUrl: spotifyEmbedUrl,
       });
     }
 
