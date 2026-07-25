@@ -169,7 +169,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Social & Media Hub Block with Official Brand Logos */}
+        {/* Social & Media Hub Block with All 6 Brand Logos */}
         <section className="flex flex-col gap-3">
           <div className="text-xs font-semibold text-[#A1A1AA] tracking-wider">
             CONNECT & SUBSCRIBE
@@ -200,7 +200,7 @@ export default function Home() {
 
             {/* Spotify */}
             <a
-              href="https://open.spotify.com/show/4O3" // Update with your exact Spotify show link if needed
+              href="https://open.spotify.com/show/4O3"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#1DB954] hover:bg-[#1DB954]/10 transition-all active:scale-[0.98]"
@@ -240,9 +240,30 @@ export default function Home() {
               <span className="text-xs font-medium text-[#A1A1AA]">Follow →</span>
             </a>
 
+            {/* Snapchat */}
+            <a
+              href="https://www.snapchat.com/@harshdeep_243"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#FFFC00] hover:bg-[#FFFC00]/10 transition-all active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#FFFC00]/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 fill-[#FFFC00]" viewBox="0 0 24 24">
+                    <path d="M12.022 1.5c-4.835 0-7.393 3.518-7.393 6.271 0 1.954.898 3.328 1.83 4.135.263.227.355.432.227.773-.136.363-.454 1.158-.59 1.498-.068.181-.182.25-.386.181-.613-.204-1.748-.567-2.815-.159-.976.363-1.408 1.294-.795 2.112.568.749 2.044 1.112 3.406 1.112.386 0 .727-.045.999-.113.318-.091.545.023.681.25.386.636 1.453 2.18 4.836 2.18 3.383 0 4.45-1.544 4.836-2.18.136-.227.363-.341.681-.25.272.068.613.113.999.113 1.362 0 2.838-.363 3.406-1.112.613-.818.181-1.749-.795-2.112-1.067-.408-2.202-.045-2.815.159-.204.069-.318 0-.386-.181-.136-.34-.454-1.135-.59-1.498-.128-.341-.036-.546.227-.773.932-.807 1.83-2.181 1.83-4.135 0-2.753-2.558-6.271-7.393-6.271z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Snapchat</div>
+                  <div className="text-[10px] text-[#A1A1AA]">Behind The Scenes</div>
+                </div>
+              </div>
+              <span className="text-xs font-medium text-[#A1A1AA]">Add →</span>
+            </a>
+
             {/* Facebook */}
             <a
-              href="https://facebook.com" // Update with your official Facebook page URL
+              href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#1877F2] hover:bg-[#1877F2]/10 transition-all active:scale-[0.98]"
@@ -259,6 +280,27 @@ export default function Home() {
                 </div>
               </div>
               <span className="text-xs font-medium text-[#A1A1AA]">Follow →</span>
+            </a>
+
+            {/* LinkedIn */}
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#0A66C2] hover:bg-[#0A66C2]/10 transition-all active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#0A66C2]/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 fill-[#0A66C2]" viewBox="0 0 24 24">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">LinkedIn</div>
+                  <div className="text-[10px] text-[#A1A1AA]">Official Business Page</div>
+                </div>
+              </div>
+              <span className="text-xs font-medium text-[#A1A1AA]">Connect →</span>
             </a>
 
           </div>
