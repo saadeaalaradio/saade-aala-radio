@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface EpisodeData {
   title: string;
@@ -38,11 +39,7 @@ export default function Home() {
     alert(`Playing sound effect: ${soundName}`);
   };
 
-  return (
-    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B]">
-      <main className="w-full max-w-[440px] flex flex-col gap-6">
-        
-        {/* Header Navigation */}
+{/* Header Navigation */}
         <header className="flex items-center justify-between py-2">
           <div className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-[#FFC800]">
@@ -52,9 +49,12 @@ export default function Home() {
               RADIO
             </span>
           </div>
-          <span className="text-[10px] font-semibold tracking-wider text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5">
-            OFFICIAL SITE
-          </span>
+          <Link
+            href="/team"
+            className="text-[10px] font-semibold tracking-wider text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5 hover:border-[#FFC800] hover:text-[#FFC800] transition-colors"
+          >
+            MEET THE TEAM →
+          </Link>
         </header>
 
         {/* Hero Card: Dynamic Episode Auto-Sync */}
