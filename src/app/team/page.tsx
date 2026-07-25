@@ -7,6 +7,7 @@ interface Host {
   role: string;
   bio: string;
   instagram?: string;
+  snapchat?: string;
 }
 
 const teamMembers: Host[] = [
@@ -14,19 +15,22 @@ const teamMembers: Host[] = [
     name: "Harshdeep Singh",
     role: "Founder & Co-Host",
     bio: "Bringing the chaotic stories, unfiltered commentary, and daily rants to Saade Aala Radio.",
-    instagram: "https://instagram.com",
+    instagram: "https://www.instagram.com/harshdeep243",
+    snapchat: "https://www.snapchat.com/@harshdeep_243",
   },
   {
     name: "Sarabjeet Singh",
     role: "Co-Host",
     bio: "Master of comic timing, quick comebacks, and keeping the banter rolling.",
-    instagram: "https://instagram.com",
+    instagram: "https://www.instagram.com/sarabjeet_00001",
+    snapchat: "https://www.snapchat.com/@sarabjeet0033",
   },
   {
     name: "Sandeep Singh",
     role: "Co-Host",
     bio: "The wild card of the group bringing unexpected roasts and unfiltered hot takes.",
-    instagram: "https://instagram.com",
+    instagram: "https://www.instagram.com/saandeep_ambala_official",
+    snapchat: "https://www.snapchat.com/@puadh_aale",
   },
 ];
 
@@ -96,17 +100,32 @@ export default function TeamPage() {
                 {member.bio}
               </p>
 
-              {member.instagram && (
-                <a
-                  href={member.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#A1A1AA] hover:text-[#FFC800] transition-colors mt-1"
-                >
-                  <span>📷 Follow on Instagram</span>
-                  <span>→</span>
-                </a>
-              )}
+              {/* Social Buttons Row */}
+              <div className="flex items-center gap-4 pt-3 border-t border-[#27272A]">
+                {member.instagram && (
+                  <a
+                    href={member.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#A1A1AA] hover:text-[#FFC800] transition-colors"
+                  >
+                    <span>📷 Instagram</span>
+                    <span>→</span>
+                  </a>
+                )}
+
+                {member.snapchat && (
+                  <a
+                    href={member.snapchat}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#A1A1AA] hover:text-[#FFC800] transition-colors"
+                  >
+                    <span>👻 Snapchat</span>
+                    <span>→</span>
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </section>
