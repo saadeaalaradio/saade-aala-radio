@@ -214,6 +214,29 @@ export default function Home() {
           </div>
         </section>
 
+        {/* 🎮 8-Bit MMA Mini Game Banner */}
+<section>
+  <Link
+    href="/game"
+    className="flex items-center justify-between bg-gradient-to-r from-[#18181C] to-[#141417] border border-[#FFC800]/40 p-4 rounded-2xl hover:border-[#FFC800] transition-all group"
+  >
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl bg-[#FFC800]/20 flex items-center justify-center text-lg">
+        🥊
+      </div>
+      <div>
+        <div className="text-xs font-bold text-white group-hover:text-[#FFC800] transition-colors">
+          SAADE AALA MMA ARCADE
+        </div>
+        <div className="text-[10px] text-[#A1A1AA]">
+          Fight AI as Harshdeep, Sarabjeet or Sandeep!
+        </div>
+      </div>
+    </div>
+    <span className="text-xs font-bold text-[#FFC800]">PLAY →</span>
+  </Link>
+</section>
+
         {/* Social & Media Hub Block with Brand Logos */}
         <section className="flex flex-col gap-3">
           <div className="text-xs font-semibold text-[#A1A1AA] tracking-wider">
