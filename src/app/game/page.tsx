@@ -3,113 +3,80 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 
-// Web Audio API Synthesizer
+// Web Audio API Synthesizer (Same as previous build)
 const playSynthSound = (type: "punch" | "kick" | "block" | "jump" | "ko" | "special" | "lightning" | "fire" | "fight") => {
   if (typeof window === "undefined") return;
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
     if (type === "punch") {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = "square";
       osc.frequency.setValueAtTime(180, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
       gain.gain.setValueAtTime(0.3, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.08);
+      osc.start(); osc.stop(ctx.currentTime + 0.08);
     } else if (type === "kick") {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(240, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.12);
       gain.gain.setValueAtTime(0.4, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.12);
+      osc.start(); osc.stop(ctx.currentTime + 0.12);
     } else if (type === "block") {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = "triangle";
       osc.frequency.setValueAtTime(500, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.06);
       gain.gain.setValueAtTime(0.2, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.06);
+      osc.start(); osc.stop(ctx.currentTime + 0.06);
     } else if (type === "jump") {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(140, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(420, ctx.currentTime + 0.1);
       gain.gain.setValueAtTime(0.2, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
+      osc.start(); osc.stop(ctx.currentTime + 0.1);
     } else if (type === "fire" || type === "special") {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(150, ctx.currentTime);
       osc.frequency.linearRampToValueAtTime(600, ctx.currentTime + 0.2);
       gain.gain.setValueAtTime(0.5, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
+      osc.start(); osc.stop(ctx.currentTime + 0.3);
     } else if (type === "lightning") {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = "square";
       osc.frequency.setValueAtTime(800, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.25);
       gain.gain.setValueAtTime(0.4, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.25);
+      osc.start(); osc.stop(ctx.currentTime + 0.25);
     } else if (type === "fight") {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
       osc.type = "square";
       osc.frequency.setValueAtTime(300, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
       gain.gain.setValueAtTime(0.3, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
+      osc.start(); osc.stop(ctx.currentTime + 0.2);
     } else if (type === "ko") {
       const notes = [261.63, 329.63, 392.0, 523.25];
       notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "square";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.25, ctx.currentTime + idx * 0.09);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.09 + 0.2);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + idx * 0.09);
-        osc.stop(ctx.currentTime + idx * 0.09 + 0.2);
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = "square"; o.frequency.value = freq;
+        g.gain.setValueAtTime(0.25, ctx.currentTime + idx * 0.09);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.09 + 0.2);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(ctx.currentTime + idx * 0.09);
+        o.stop(ctx.currentTime + idx * 0.09 + 0.2);
       });
     }
+
+    if (type !== "ko") { osc.connect(gain); gain.connect(ctx.destination); }
+
   } catch (e) {
     console.warn("Audio Context error:", e);
   }
@@ -185,12 +152,10 @@ export default function ArcadeGame() {
   const [screenShake, setScreenShake] = useState(false);
   const [introBanner, setIntroBanner] = useState<string | null>(null);
 
-  // 3-Round System State
   const [currentRound, setCurrentRound] = useState(1);
   const [playerRoundWins, setPlayerRoundWins] = useState(0);
   const [aiRoundWins, setAiRoundWins] = useState(0);
 
-  // Real-time HP & Combo Streaks
   const [playerHp, setPlayerHp] = useState(100);
   const [aiHp, setAiHp] = useState(100);
   const [comboHits, setComboHits] = useState(0);
@@ -310,7 +275,7 @@ export default function ArcadeGame() {
     resetRound(1);
   };
 
-  // 60FPS Game Loop
+  // Main 60FPS Game Loop
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -328,20 +293,16 @@ export default function ArcadeGame() {
       const groundLevelP = 120 + p.heightOffset;
       const groundLevelAI = 120 + ai.heightOffset;
 
-      // Movement Bounds
       p.x += p.vx;
       if (p.x < 10) p.x = 10;
       if (p.x > ai.x - 22) p.x = ai.x - 22;
 
-      // --- HARDER, REACTIVE AI LOGIC ---
+      // Smart AI Responses
       const dist = Math.abs(p.x - ai.x);
-
-      // AI Reactions to Player Attacks (High Reaction Speed)
       if ((p.state === "punch" || p.state === "kick" || p.state === "special") && dist < 50) {
-        const aiDecision = Math.random();
-        if (aiDecision > 0.3) {
-          ai.state = "block"; // 70% chance to block
-        } else if (aiDecision > 0.15 && ai.y === groundLevelAI) {
+        if (Math.random() > 0.3) {
+          ai.state = "block";
+        } else if (Math.random() > 0.15 && ai.y === groundLevelAI) {
           ai.vy = -10;
           ai.state = "jump";
         }
@@ -400,21 +361,17 @@ export default function ArcadeGame() {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // 🏆 OFFICIAL SAADE AALA RADIO LOGO IN ARENA BACKGROUND 🏆
+      // SAADE AALA RADIO LOGO IN ARENA BACKGROUND
       ctx.save();
-      ctx.fillStyle = "rgba(255, 200, 0, 0.08)"; // Subtle transparent yellow
+      ctx.fillStyle = "rgba(255, 200, 0, 0.08)";
       ctx.font = "900 16px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("SAADE AALA RADIO", 150, 65);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-      ctx.lineWidth = 1;
-      ctx.strokeText("SAADE AALA RADIO", 150, 65);
       ctx.restore();
 
       // Octagon Mat & Mesh Fence
       ctx.fillStyle = "#18181C";
       ctx.fillRect(0, 160, canvas.width, 40);
-
       ctx.strokeStyle = "#27272A";
       ctx.lineWidth = 1;
       for (let x = 0; x < canvas.width; x += 15) {
@@ -424,8 +381,8 @@ export default function ArcadeGame() {
         ctx.stroke();
       }
 
-      // Draw Pixel Fighter
-      const drawFighter = (f: Fighter, isFacingRight: boolean) => {
+      // --- DRAW 16-BIT CHARACTER FROM PHOTO & BUILD ---
+      const draw16BitCharacter = (f: Fighter, isFacingRight: boolean) => {
         ctx.save();
         ctx.translate(f.x, f.y);
 
@@ -438,50 +395,76 @@ export default function ArcadeGame() {
         ctx.ellipse(15, 38 + legHeight, 12, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Turban
+        // 16-Bit Turban Color (Procedural but layered)
         ctx.fillStyle = f.color;
         ctx.fillRect(8, 0, 14, 10);
+        // Turban Highlight layer
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        ctx.fillRect(9, 1, 12, 3);
+        ctx.fillRect(10, 4, 10, 2);
 
-        // Skin Tone Face
-        ctx.fillStyle = "#E0A96D";
-        ctx.fillRect(10, 10, 10, 8);
+        // --- FACE: Photorealistic 16-Bit Beard & mustache ---
+        ctx.fillStyle = "#C68E65"; // Beard color
+        ctx.fillRect(9, 10, 12, 9); // Full beard base
+        
+        ctx.fillStyle = "#A67B5B"; // Mustache / Beard detail
+        ctx.fillRect(9, 13, 12, 1); // Mustache line
+        ctx.fillRect(11, 14, 8, 3); // Chin beard volume
 
-        // Shirt
+        ctx.fillStyle = "#EAC4A4"; // Face skin tone
+        ctx.fillRect(11, 10, 8, 4); // Clear skin patch (eyes/nose area)
+
+        // Eyes
+        ctx.fillStyle = "#27272A";
+        ctx.fillRect(13, 11, 1, 1);
+        ctx.fillRect(16, 11, 1, 1);
+
+        // --- BODY: SHIRT from specific data ---
         ctx.fillStyle = f.shirtColor;
-        ctx.fillRect(8, 18, 14, torsoHeight);
+        ctx.fillRect(8, 19, 14, torsoHeight);
+        
+        // Shirt definition/muscles
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillRect(10, 20, 2, torsoHeight - 2); // Muscle definition
+        ctx.fillRect(18, 20, 2, torsoHeight - 2);
 
         // Pants
         ctx.fillStyle = f.pantsColor;
-        ctx.fillRect(8, 18 + torsoHeight, 14, 8);
+        ctx.fillRect(8, 19 + torsoHeight, 14, 8);
 
         // Legs
         ctx.fillStyle = "#E0A96D";
-        ctx.fillRect(10, 26 + torsoHeight, 4, legHeight);
-        ctx.fillRect(16, 26 + torsoHeight, 4, legHeight);
+        ctx.fillRect(10, 27 + torsoHeight, 4, legHeight);
+        ctx.fillRect(16, 27 + torsoHeight, 4, legHeight);
 
-        // Action Frames
+        // Action Frames (Arms/Legs)
         ctx.fillStyle = "#E0A96D";
         if (f.state === "punch") {
-          ctx.fillRect(isFacingRight ? 18 : -8, 18, 16, 5);
+          ctx.fillStyle = f.shirtColor;
+          ctx.fillRect(isFacingRight ? 18 : -8, 19, 16, 5); // Shirt sleeve extended
+          ctx.fillStyle = "#E0A96D";
+          ctx.fillRect(isFacingRight ? 32 : -8, 19, 3, 5); // Fist
         } else if (f.state === "kick") {
-          ctx.fillRect(isFacingRight ? 18 : -10, 24 + torsoHeight, 16, 6);
+          ctx.fillStyle = f.pantsColor;
+          ctx.fillRect(isFacingRight ? 18 : -10, 24 + torsoHeight, 16, 6); // Pants leg extended
+          ctx.fillStyle = "#E0A96D";
+          ctx.fillRect(isFacingRight ? 32 : -10, 24 + torsoHeight, 3, 6); // Foot
         } else if (f.state === "special") {
           ctx.fillStyle = f.id === "sandeep" ? "#00E5FF" : "#FFC800";
-          ctx.fillRect(isFacingRight ? 18 : -16, 14, 24, 14);
+          ctx.fillRect(isFacingRight ? 18 : -16, 14, 24, 14); // Super FX
         } else if (f.state === "block") {
-          ctx.fillRect(isFacingRight ? 14 : 2, 14, 6, 12);
+          ctx.fillRect(isFacingRight ? 14 : 2, 14, 6, 12); // Blocking guard
         } else {
-          ctx.fillRect(4, 18, 5, 10);
-          ctx.fillRect(21, 18, 5, 10);
+          ctx.fillRect(4, 19, 5, 10);
+          ctx.fillRect(21, 19, 5, 10);
         }
 
         ctx.restore();
       };
 
-      drawFighter(p, true);
-      drawFighter(ai, false);
+      draw16BitCharacter(p, true);
+      draw16BitCharacter(ai, false);
 
-      // Render FX Particles
       particles.current.forEach((part, index) => {
         ctx.fillStyle = part.color;
         ctx.font = "bold 10px monospace";
@@ -525,39 +508,34 @@ export default function ArcadeGame() {
     if (p.state === "walk") p.state = "idle";
   };
 
-  // Round Winner Handler (Best of 3 Format)
+  // 3-Round System Logic
   const handleRoundEnd = (roundWinner: "player" | "ai") => {
     playSynthSound("ko");
 
     if (roundWinner === "player") {
       const newPScore = playerRoundWins + 1;
       setPlayerRoundWins(newPScore);
-
-      // Check if Player has won 2 rounds (Early Match Win!)
       if (newPScore >= 2) {
-        setWinner(`🎉 ${playerHost.name} WINS THE CHAMPIONSHIP (2-0 / 2-1)!`);
+        setWinner(`🎉 ${playerHost.name} IS THE CHAMPION (2-${aiRoundWins})!`);
         setGameStarted(false);
         return;
       }
     } else {
       const newAIScore = aiRoundWins + 1;
       setAiRoundWins(newAIScore);
-
-      // Check if AI has won 2 rounds
       if (newAIScore >= 2) {
-        setWinner(`💀 ${opponentHost.name} WINS THE CHAMPIONSHIP (2-0 / 2-1)!`);
+        setWinner(`💀 ${opponentHost.name} IS THE CHAMPION (2-${playerRoundWins})!`);
         setGameStarted(false);
         return;
       }
     }
 
-    // Advance to next round
     const nextR = currentRound + 1;
     setCurrentRound(nextR);
     resetRound(nextR);
   };
 
-  // Combat Attack Handlers
+  // Combat Handlers
   const handleAction = (action: "punch" | "kick" | "jump" | "block" | "special") => {
     if (introBanner) return;
     const p = gameState.current.player;
@@ -591,11 +569,9 @@ export default function ArcadeGame() {
       let dmg = 35;
       if (p.id === "harshdeep") {
         playSynthSound("fire");
-        dmg = 35;
         addParticle(ai.x, ai.y, "🔥 SANGRUR DOUBLE PUNCH! -35", "#FFC800", "fire");
       } else if (p.id === "sarabjeet") {
         playSynthSound("punch");
-        dmg = 35;
         addParticle(ai.x, ai.y, "🥊 JANDPUR DOUBLE JAB! -35", "#7000E0", "normal");
       } else if (p.id === "sandeep") {
         playSynthSound("lightning");
@@ -607,18 +583,14 @@ export default function ArcadeGame() {
       setAiHp(ai.hp);
       ai.state = "hit";
 
-      if (ai.hp <= 0) {
-        handleRoundEnd("player");
-        return;
-      }
+      if (ai.hp <= 0) { handleRoundEnd("player"); return; }
     } 
-    // REGULAR ATTACKS
+    // BASIC ATTACKS
     else if ((action === "punch" || action === "kick") && distance < 42) {
       if (ai.state !== "block") {
         let dmg = action === "punch" ? 12 : 16;
         playSynthSound(action);
         
-        // Landed hit -> Increment hit streak immediately!
         p.comboHits = Math.min(3, p.comboHits + 1);
         setComboHits(p.comboHits);
 
@@ -627,43 +599,36 @@ export default function ArcadeGame() {
         ai.state = "hit";
         addParticle(ai.x + 10, ai.y, `-${dmg}`, "#FFC800");
 
-        if (ai.hp <= 0) {
-          handleRoundEnd("player");
-          return;
-        }
+        if (ai.hp <= 0) { handleRoundEnd("player"); return; }
       } else {
-        // Blocked attack -> Reset streak to 0!
         playSynthSound("block");
         p.comboHits = 0;
         setComboHits(0);
         addParticle(ai.x + 10, ai.y, "BLOCKED!", "#A1A1AA");
       }
     } else if (action === "punch" || action === "kick") {
-      // Whiffed attack -> Reset streak to 0!
       p.comboHits = 0;
       setComboHits(0);
     }
 
-    // AI COUNTER ATTACK REACTION
+    // AI COUNTER ATTACK
     setTimeout(() => {
       const currentDist = Math.abs((p.x + 15) - (ai.x + 15));
-      if (ai.hp > 0 && currentDist < 42 && Math.random() > 0.25) {
+      if (ai.hp > 0 && currentDist < 42 && Math.random() > 0.2) {
         if (p.state !== "block") {
-          let aiDmg = ai.id === "sarabjeet" ? 20 : 14; // Stronger AI damage
+          let aiDmg = ai.id === "sarabjeet" ? 22 : 14;
           playSynthSound("punch");
           p.hp = Math.max(0, p.hp - aiDmg);
           setPlayerHp(p.hp);
 
-          // TAKING DAMAGE RESETS SPECIAL POWER TO 0!
+          // TAKING DAMAGE RESETS STREAK
           p.comboHits = 0;
           setComboHits(0);
 
           p.state = "hit";
           addParticle(p.x + 10, p.y, `-${aiDmg}`, "#FF0000");
 
-          if (p.hp <= 0) {
-            handleRoundEnd("ai");
-          }
+          if (p.hp <= 0) { handleRoundEnd("ai"); }
         } else {
           playSynthSound("block");
           addParticle(p.x + 10, p.y, "BLOCKED!", "#A1A1AA");
@@ -685,69 +650,35 @@ export default function ArcadeGame() {
             <span className="text-base font-bold text-[#FFC800]">SAADE AALA</span>
             <span className="text-base text-white">ARCADE</span>
           </Link>
-          <Link
-            href="/"
-            className="text-[10px] font-bold text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5"
-          >
+          <Link href="/" className="text-[10px] font-bold text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5">
             ← EXIT
           </Link>
         </header>
 
-        {/* CHARACTER SELECTION */}
+        {/* SELECTION SCREEN */}
         {!gameStarted && !winner && (
           <section className="flex flex-col gap-4 bg-[#141417] border border-[#27272A] p-5 rounded-2xl text-center shadow-2xl">
             <div className="inline-block mx-auto px-3 py-1 rounded-full text-[10px] font-bold text-[#FFC800] bg-[#FFC800]/10 border border-[#FFC800]/20">
-              🥊 3-ROUND CHAMPIONSHIP MODE
+              🥊 3-ROUND MMA CHAMPIONSHIP
             </div>
-
-            <h1 className="text-sm font-bold text-white">Select Fighter & Opponent</h1>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-[#A1A1AA]">Your Host:</span>
-              <div className="grid grid-cols-3 gap-2">
-                {HOSTS.map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() => setPlayerHost(h)}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      playerHost.id === h.id ? "border-[#FFC800] bg-[#FFC800]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
-                    }`}
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.color }}>
-                      {h.name.charAt(0)}
-                    </div>
-                    <span className="text-[10px] font-bold text-white">{h.name}</span>
-                  </button>
-                ))}
-              </div>
+            <h1 className="text-sm font-bold text-white">Select Your Host & AI Opponent</h1>
+            <div className="grid grid-cols-3 gap-2">
+              {HOSTS.map((h) => (
+                <button key={h.id} onClick={() => setPlayerHost(h)} className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${playerHost.id === h.id ? "border-[#FFC800] bg-[#FFC800]/20 scale-105" : "border-[#27272A] bg-[#09090B]"}`}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.color }}>{h.name.charAt(0)}</div>
+                  <span className="text-[10px] font-bold text-white">{h.name}</span>
+                </button>
+              ))}
             </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-[#A1A1AA]">AI Opponent:</span>
-              <div className="grid grid-cols-3 gap-2">
-                {HOSTS.filter(h => h.id !== playerHost.id).map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() => setOpponentHost(h)}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      opponentHost.id === h.id ? "border-[#FF0000] bg-[#FF0000]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
-                    }`}
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.color }}>
-                      {h.name.charAt(0)}
-                    </div>
-                    <span className="text-[10px] font-bold text-white">{h.name}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="grid grid-cols-3 gap-2">
+              {HOSTS.filter(h => h.id !== playerHost.id).map((h) => (
+                <button key={h.id} onClick={() => setOpponentHost(h)} className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${opponentHost.id === h.id ? "border-[#FF0000] bg-[#FF0000]/20 scale-105" : "border-[#27272A] bg-[#09090B]"}`}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.color }}>{h.name.charAt(0)}</div>
+                  <span className="text-[10px] font-bold text-white">{h.name}</span>
+                </button>
+              ))}
             </div>
-
-            <button
-              onClick={() => startGame(playerHost, opponentHost)}
-              className="mt-2 w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-lg active:scale-95 transition-transform"
-            >
-              ⚔️ ENTER OCTAGON
-            </button>
+            <button onClick={() => startGame(playerHost, opponentHost)} className="mt-2 w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl active:scale-95 transition-transform">⚔️ ENTER OCTAGON</button>
           </section>
         )}
 
@@ -756,161 +687,74 @@ export default function ArcadeGame() {
           <div className="bg-[#141417] border-2 border-[#FFC800] p-6 rounded-2xl text-center flex flex-col gap-4 shadow-2xl">
             <span className="text-4xl animate-bounce">🏆</span>
             <h2 className="text-sm font-extrabold text-white leading-relaxed">{winner}</h2>
-            <button
-              onClick={() => setWinner(null)}
-              className="w-full py-3 bg-[#FFC800] text-black font-bold text-xs rounded-xl active:scale-95 transition-transform"
-            >
-              🔄 FIGHT AGAIN
-            </button>
+            <button onClick={() => setWinner(null)} className="w-full py-3 bg-[#FFC800] text-black font-bold text-xs rounded-xl active:scale-95">🔄 FIGHT AGAIN</button>
           </div>
         )}
 
-        {/* 60FPS CANVAS ARENA */}
+        {/* FIGHTING ARENA */}
         {gameStarted && (
           <div className="flex flex-col gap-3">
             
-            {/* Health & 3-Round Scoreboard */}
+            {/* Scoreboard */}
             <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-4 flex flex-col gap-2.5 shadow-xl">
-              
-              {/* Scoreboard Header */}
               <div className="flex justify-between items-center text-xs font-bold">
                 <span className="flex items-center gap-1.5" style={{ color: playerHost.color }}>
                   {playerHost.name} ({playerHp} HP)
-                  <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white">
-                    ⭐ {playerRoundWins}
-                  </span>
+                  <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white">⭐ {playerRoundWins}</span>
                 </span>
-
-                <span className="text-[10px] text-[#FFC800] bg-[#FFC800]/10 border border-[#FFC800]/20 px-2 py-0.5 rounded-full font-extrabold">
-                  RD {currentRound} / 3
-                </span>
-
+                <span className="text-[10px] text-[#FFC800] bg-[#FFC800]/10 border border-[#FFC800]/20 px-2 py-0.5 rounded-full font-extrabold">RD {currentRound} / 3</span>
                 <span className="flex items-center gap-1.5" style={{ color: opponentHost.color }}>
-                  <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white">
-                    ⭐ {aiRoundWins}
-                  </span>
+                  <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white">⭐ {aiRoundWins}</span>
                   {opponentHost.name} ({aiHp} HP)
                 </span>
               </div>
-
-              {/* Live Health Bars */}
+              
               <div className="flex gap-2">
                 <div className="flex-1 bg-[#09090B] h-3.5 rounded-full overflow-hidden border border-[#27272A]">
-                  <div
-                    className="h-full transition-all duration-200"
-                    style={{ width: `${playerHp}%`, backgroundColor: playerHost.color }}
-                  />
+                  <div className="h-full transition-all duration-200" style={{ width: `${playerHp}%`, backgroundColor: playerHost.color }} />
                 </div>
                 <div className="flex-1 bg-[#09090B] h-3.5 rounded-full overflow-hidden border border-[#27272A]">
-                  <div
-                    className="h-full transition-all duration-200"
-                    style={{ width: `${aiHp}%`, backgroundColor: opponentHost.color }}
-                  />
+                  <div className="h-full transition-all duration-200" style={{ width: `${aiHp}%`, backgroundColor: opponentHost.color }} />
                 </div>
               </div>
 
-              {/* 3-Hit Streak Power Bar */}
+              {/* Special Streak Meter */}
               <div className="flex items-center justify-between text-[10px] text-[#A1A1AA]">
-                <span>SPECIAL STREAK (3 NO-DAMAGE HITS)</span>
-                <span className="text-[#FFC800] font-bold">
-                  {comboHits >= 3 ? "🔥 SUPER POWER READY!" : `${comboHits} / 3 HITS`}
-                </span>
+                <span>SPECIAL STREAK</span>
+                <span className="text-[#FFC800] font-bold">{comboHits >= 3 ? "🔥 READY!" : `${comboHits} / 3 HITS`}</span>
               </div>
               <div className="w-full bg-[#09090B] h-2 rounded-full overflow-hidden border border-[#27272A]">
-                <div
-                  className="h-full transition-all duration-200 bg-gradient-to-r from-[#FFC800] to-[#FF0000]"
-                  style={{ width: `${(comboHits / 3) * 100}%` }}
-                />
+                <div className="h-full transition-all duration-200 bg-gradient-to-r from-[#FFC800] to-[#FF0000]" style={{ width: `${(comboHits / 3) * 100}%` }} />
               </div>
             </div>
 
-            {/* Canvas Viewport with Overlay Intro Banner */}
+            {/* Canvas Viewport */}
             <div className="relative w-full aspect-[4/3] bg-black rounded-2xl border-2 border-[#27272A] overflow-hidden flex items-center justify-center shadow-2xl">
-              <canvas
-                ref={canvasRef}
-                width={300}
-                height={200}
-                className="w-full h-full object-cover"
-              />
-
-              {/* Fight Intro Banner Overlay */}
+              <canvas ref={canvasRef} width={300} height={200} className="w-full h-full object-cover" />
               {introBanner && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
-                  <span className="text-2xl font-black text-[#FFC800] tracking-widest animate-pulse scale-125 border-y-2 border-[#FFC800] py-2 px-6">
-                    {introBanner}
-                  </span>
+                  <span className="text-2xl font-black text-[#FFC800] tracking-widest animate-pulse scale-125 border-y-2 border-[#FFC800] py-2 px-6">{introBanner}</span>
                 </div>
               )}
             </div>
 
             {/* CONTROLS */}
             <div className="flex flex-col gap-2">
-              
-              {/* Special Move Button */}
-              <button
-                onClick={() => handleAction("special")}
-                disabled={comboHits < 3 || !!introBanner}
-                className={`w-full py-3 rounded-xl text-xs font-black tracking-wider transition-all shadow-lg ${
-                  comboHits >= 3 && !introBanner
-                    ? "bg-gradient-to-r from-[#FFC800] to-[#FF4500] text-black active:scale-95 animate-pulse cursor-pointer"
-                    : "bg-[#141417] text-[#52525B] border border-[#27272A] cursor-not-allowed"
-                }`}
-              >
-                🔥 {playerHost.special} (UNLOCKED AT 3 HITS)
+              <button onClick={() => handleAction("special")} disabled={comboHits < 3 || !!introBanner} className={`w-full py-3 rounded-xl text-xs font-black tracking-wider shadow-lg ${comboHits >= 3 && !introBanner ? "bg-gradient-to-r from-[#FFC800] to-[#FF4500] text-black active:scale-95 animate-pulse" : "bg-[#141417] text-[#52525B] cursor-not-allowed"}`}>
+                🔥 {playerHost.special} (3-HIT STREAK)
               </button>
-
               <div className="flex gap-2">
-                {/* D-PAD Movement */}
                 <div className="flex-1 grid grid-cols-2 gap-1.5 bg-[#141417] border border-[#27272A] p-2 rounded-2xl">
-                  <button
-                    onMouseDown={() => startMove("left")}
-                    onMouseUp={stopMove}
-                    onTouchStart={() => startMove("left")}
-                    onTouchEnd={stopMove}
-                    className="py-4 bg-[#09090B] border border-[#27272A] active:bg-[#FFC800] active:text-black rounded-xl text-xs font-bold text-white flex items-center justify-center"
-                  >
-                    ◀ LEFT
-                  </button>
-                  <button
-                    onMouseDown={() => startMove("right")}
-                    onMouseUp={stopMove}
-                    onTouchStart={() => startMove("right")}
-                    onTouchEnd={stopMove}
-                    className="py-4 bg-[#09090B] border border-[#27272A] active:bg-[#FFC800] active:text-black rounded-xl text-xs font-bold text-white flex items-center justify-center"
-                  >
-                    RIGHT ▶
-                  </button>
+                  <button onMouseDown={() => startMove("left")} onMouseUp={stopMove} onTouchStart={() => startMove("left")} onTouchEnd={stopMove} className="py-4 bg-[#09090B] rounded-xl text-xs font-bold text-white flex items-center justify-center">◀ LEFT</button>
+                  <button onMouseDown={() => startMove("right")} onMouseUp={stopMove} onTouchStart={() => startMove("right")} onTouchEnd={stopMove} className="py-4 bg-[#09090B] rounded-xl text-xs font-bold text-white flex items-center justify-center">RIGHT ▶</button>
                 </div>
-
-                {/* Combat Action Buttons */}
                 <div className="flex-1 grid grid-cols-2 gap-1.5 bg-[#141417] border border-[#27272A] p-2 rounded-2xl">
-                  <button
-                    onClick={() => handleAction("punch")}
-                    className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                  >
-                    👊 PUNCH
-                  </button>
-                  <button
-                    onClick={() => handleAction("kick")}
-                    className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                  >
-                    🦶 KICK
-                  </button>
-                  <button
-                    onClick={() => handleAction("jump")}
-                    className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-white active:scale-95"
-                  >
-                    🦘 JUMP
-                  </button>
-                  <button
-                    onClick={() => handleAction("block")}
-                    className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-[#FFC800] active:scale-95"
-                  >
-                    🛡️ BLOCK
-                  </button>
+                  <button onClick={() => handleAction("punch")} className="py-2.5 bg-[#09090B] rounded-xl text-xs font-bold text-white">👊 PUNCH</button>
+                  <button onClick={() => handleAction("kick")} className="py-2.5 bg-[#09090B] rounded-xl text-xs font-bold text-white">🦶 KICK</button>
+                  <button onClick={() => handleAction("jump")} className="py-2.5 bg-[#09090B] rounded-xl text-xs font-bold text-white">🦘 JUMP</button>
+                  <button onClick={() => handleAction("block")} className="py-2.5 bg-[#09090B] rounded-xl text-xs font-bold text-[#FFC800]">🛡️ BLOCK</button>
                 </div>
               </div>
-
             </div>
 
           </div>
