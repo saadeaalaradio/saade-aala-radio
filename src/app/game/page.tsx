@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 
-// Web Audio API Synthesizer (Zero file download lag)
+// Retro Web Audio Synthesizer Engine
 const playSynthSound = (type: "punch" | "kick" | "block" | "jump" | "ko" | "special" | "lightning" | "fire" | "fight") => {
   if (typeof window === "undefined") return;
   try {
@@ -94,7 +94,7 @@ interface VisualParticle {
 interface Fighter {
   id: string;
   name: string;
-  hairColor: string; // Used for hair instead of turban
+  hairColor: string; // Turban color removed
   shirtColor: string;
   pantsColor: string;
   heightOffset: number;
@@ -277,14 +277,14 @@ export default function ArcadeGame() {
     resetRound(1);
   };
 
-  // 60FPS Game Loop
+  // 60FPS Game Loop & Canvas Rendering
   useEffect(() => {
     if (!gameStarted) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (! ctx) return;
 
     let animationId: number;
 
@@ -295,20 +295,19 @@ export default function ArcadeGame() {
       const groundLevelP = 120 + p.heightOffset;
       const groundLevelAI = 120 + ai.heightOffset;
 
-      // Position Bounds & Velocity
+      // Player Position Bounds
       p.x += p.vx;
       if (p.x < 10) p.x = 10;
       if (p.x > ai.x - 22) p.x = ai.x - 22;
 
-      // --- ADVANCED SMART AI LOGIC ---
+      // Smart AI Behavior
       const dist = Math.abs(p.x - ai.x);
 
-      // AI Reactions to Player Attacks (High Reaction Speed)
-      if ((p.state === "punch" || p.state === "kick" || p.state === "special") && dist < 50) {
+      if ((p.state === "punch" || p.state === "kick" || p.state === "special") && dist < 48) {
         const aiDecision = Math.random();
-        if (aiDecision > 0.3) {
-          ai.state = "block"; // 70% chance to block
-        } else if (aiDecision > 0.15 && ai.y === groundLevelAI) {
+        if (aiDecision > 0.4) {
+          ai.state = "block";
+        } else if (aiDecision > 0.25 && ai.y === groundLevelAI) {
           ai.vy = -10;
           ai.state = "jump";
         }
@@ -316,30 +315,29 @@ export default function ArcadeGame() {
         ai.state = "idle";
       }
 
-      // Hard AI Offensive Aggression
       if (ai.state !== "block") {
         if (ai.id === "harshdeep") {
-          if (dist < 45 && Math.random() > 0.65) {
+          if (dist < 42 && Math.random() > 0.75) {
             ai.x += ai.speed;
-          } else if (dist > 50 && Math.random() > 0.65) {
+          } else if (dist > 55 && Math.random() > 0.8) {
             ai.x -= ai.speed;
           }
         } else if (ai.id === "sarabjeet") {
-          if (dist > 28 && Math.random() > 0.7) {
+          if (dist > 32 && Math.random() > 0.85) {
             ai.x -= ai.speed;
           }
         } else if (ai.id === "sandeep") {
-          if (dist > 32 && Math.random() > 0.6) {
+          if (dist > 35 && Math.random() > 0.7) {
             ai.x -= ai.speed;
-          } else if (dist < 26 && Math.random() > 0.65) {
-            ai.x += ai.speed * 1.3;
+          } else if (dist < 28 && Math.random() > 0.75) {
+            ai.x += ai.speed * 1.2;
           }
         }
       }
 
       if (ai.x > 250) ai.x = 250;
 
-      // Gravity Physics
+      // Gravity
       if (p.y < groundLevelP) p.vy += 0.8;
       p.y += p.vy;
       if (p.y >= groundLevelP) {
@@ -356,20 +354,20 @@ export default function ArcadeGame() {
         if (ai.state === "jump") ai.state = "idle";
       }
 
-      // --- CANVAS BACKGROUND & LOGO ---
+      // Background Canvas Design
       ctx.fillStyle = "#09090B";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Arena Spotlight Glow
+      // Arena Stage Lighting & Spotlights
       const gradient = ctx.createRadialGradient(150, 40, 10, 150, 100, 140);
       gradient.addColorStop(0, "rgba(255, 200, 0, 0.15)");
       gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // SAADE AALA RADIO LOGO IN ARENA BACKGROUND
+      // 🏆 OFFICIAL SAADE AALA RADIO LOGO IN ARENA BACKGROUND 🏆
       ctx.save();
-      ctx.fillStyle = "rgba(255, 200, 0, 0.08)";
+      ctx.fillStyle = "rgba(255, 200, 0, 0.08)"; // Subtle transparent yellow
       ctx.font = "900 16px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("SAADE AALA RADIO", 150, 65);
@@ -378,6 +376,7 @@ export default function ArcadeGame() {
       // Octagon Mat & Mesh Fence
       ctx.fillStyle = "#18181C";
       ctx.fillRect(0, 160, canvas.width, 40);
+
       ctx.strokeStyle = "#27272A";
       ctx.lineWidth = 1;
       for (let x = 0; x < canvas.width; x += 15) {
@@ -387,8 +386,8 @@ export default function ArcadeGame() {
         ctx.stroke();
       }
 
-      // --- DRAW 16-BIT CHARACTER FROM PHOTO & BUILD ---
-      const draw16BitCharacter = (f: Fighter, isFacingRight: boolean) => {
+      // Draw Pixel Fighter
+      const drawFighter = (f: Fighter, isFacingRight: boolean) => {
         ctx.save();
         ctx.translate(f.x, f.y);
 
@@ -401,16 +400,15 @@ export default function ArcadeGame() {
         ctx.ellipse(15, 38 + legHeight, 12, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 16-Bit Hair (Replaced Turban)
+        // 16-Bit Hair (Turban replaced)
         ctx.fillStyle = f.hairColor;
-        // procedural but layered hair shape
-        ctx.fillRect(8, 0, 14, 10); 
+        ctx.fillRect(8, 0, 14, 10);
         // Hair Highlight layer
         ctx.fillStyle = "rgba(255,255,255,0.1)";
         ctx.fillRect(9, 1, 12, 3);
         ctx.fillRect(10, 4, 10, 2);
 
-        // Face Skin Tone
+        // Skin Tone Face
         ctx.fillStyle = "#E0A96D";
         ctx.fillRect(10, 10, 10, 8);
 
@@ -431,51 +429,40 @@ export default function ArcadeGame() {
         ctx.fillRect(13, 11, 1, 1);
         ctx.fillRect(16, 11, 1, 1);
 
-        // --- BODY: SHIRT from specific data ---
+        // Shirt
         ctx.fillStyle = f.shirtColor;
-        ctx.fillRect(8, 19, 14, torsoHeight);
-        
-        // Shirt definition/muscles
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(10, 20, 2, torsoHeight - 2); // Muscle definition
-        ctx.fillRect(18, 20, 2, torsoHeight - 2);
+        ctx.fillRect(8, 18, 14, torsoHeight);
 
         // Pants
         ctx.fillStyle = f.pantsColor;
-        ctx.fillRect(8, 19 + torsoHeight, 14, 8);
+        ctx.fillRect(8, 18 + torsoHeight, 14, 8);
 
         // Legs
         ctx.fillStyle = "#E0A96D";
-        ctx.fillRect(10, 27 + torsoHeight, 4, legHeight);
-        ctx.fillRect(16, 27 + torsoHeight, 4, legHeight);
+        ctx.fillRect(10, 26 + torsoHeight, 4, legHeight);
+        ctx.fillRect(16, 26 + torsoHeight, 4, legHeight);
 
-        // Action Frames (Arms/Legs)
+        // Action Extensions
         ctx.fillStyle = "#E0A96D";
         if (f.state === "punch") {
-          ctx.fillStyle = f.shirtColor;
-          ctx.fillRect(isFacingRight ? 18 : -8, 19, 16, 5); // Shirt sleeve extended
-          ctx.fillStyle = "#E0A96D";
-          ctx.fillRect(isFacingRight ? 32 : -8, 19, 3, 5); // Fist
+          ctx.fillRect(isFacingRight ? 18 : -8, 18, 16, 5);
         } else if (f.state === "kick") {
-          ctx.fillStyle = f.pantsColor;
-          ctx.fillRect(isFacingRight ? 18 : -10, 24 + torsoHeight, 16, 6); // Pants leg extended
-          ctx.fillStyle = "#E0A96D";
-          ctx.fillRect(isFacingRight ? 32 : -10, 24 + torsoHeight, 3, 6); // Foot
+          ctx.fillRect(isFacingRight ? 18 : -10, 24 + torsoHeight, 16, 6);
         } else if (f.state === "special") {
           ctx.fillStyle = f.id === "sandeep" ? "#00E5FF" : "#FFC800";
-          ctx.fillRect(isFacingRight ? 18 : -16, 14, 24, 14); // Super FX
+          ctx.fillRect(isFacingRight ? 18 : -16, 14, 24, 14);
         } else if (f.state === "block") {
-          ctx.fillRect(isFacingRight ? 14 : 2, 14, 6, 12); // Blocking guard
+          ctx.fillRect(isFacingRight ? 14 : 2, 14, 6, 12);
         } else {
-          ctx.fillRect(4, 19, 5, 10);
-          ctx.fillRect(21, 19, 5, 10);
+          ctx.fillRect(4, 18, 5, 10);
+          ctx.fillRect(21, 18, 5, 10);
         }
 
         ctx.restore();
       };
 
-      draw16BitCharacter(p, true);
-      draw16BitCharacter(ai, false);
+      drawFighter(p, true);
+      drawFighter(ai, false);
 
       // Render FX Particles
       particles.current.forEach((part, index) => {
@@ -507,7 +494,7 @@ export default function ArcadeGame() {
     return () => cancelAnimationFrame(animationId);
   }, [gameStarted]);
 
-  // Movement Controls
+  // Movement
   const startMove = (dir: "left" | "right") => {
     if (introBanner) return;
     const p = gameState.current.player;
@@ -629,12 +616,12 @@ export default function ArcadeGame() {
       setComboHits(0);
     }
 
-    // AI SMART COUNTER-ATTACK REACTION LOGIC (Now includes animation triggers)
+    // AI SMART COUNTER ATTACK REACTION
     setTimeout(() => {
       const currentDist = Math.abs((p.x + 15) - (ai.x + 15));
-      if (ai.hp > 0 && currentDist < 42 && Math.random() > 0.2) {
+      if (ai.hp > 0 && currentDist < 42 && Math.random() > 0.35) {
         
-        // AI Decides to Attack Back (Randomly chooses between punch and kick)
+        // AI Attack
         if (p.state !== "block") {
           let aiDmg;
           if (Math.random() > 0.5) {
@@ -662,24 +649,18 @@ export default function ArcadeGame() {
           // AI Attack got Blocked
           if (Math.random() > 0.5) {
             playSynthSound("punch");
-            ai.state = "punch"; // Trigger AI Punch Animation!
+            ai.state = "punch";
           } else {
             playSynthSound("kick");
-            ai.state = "kick"; // Trigger AI Kick Animation!
+            ai.state = "kick";
           }
           
-          // AI quickly resets animation state after being blocked
-          setTimeout(() => { ai.state = "idle"; }, 150);
-
           playSynthSound("block");
           addParticle(p.x + 10, p.y, "BLOCKED!", "#A1A1AA");
         }
       }
 
-      // Final state reset after actions (Ensures characters return to correct state)
       if (p.state !== "jump" && p.state !== "walk") p.state = "idle";
-      
-      // Delay resetting AI attack animation slightly so it’s visible on screen
       if (ai.state === "punch" || ai.state === "kick") {
         setTimeout(() => { if (ai.state !== "jump") ai.state = "idle"; }, 200);
       } else if (ai.state !== "jump") {
@@ -715,44 +696,38 @@ export default function ArcadeGame() {
 
             <h1 className="text-sm font-bold text-white">Select Your Host & AI Opponent</h1>
 
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-[#A1A1AA]">Your Host:</span>
-              <div className="grid grid-cols-3 gap-2">
-                {HOSTS.map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() => setPlayerHost(h)}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      playerHost.id === h.id ? "border-[#FFC800] bg-[#FFC800]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
-                    }`}
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.hairColor }}>
-                      {h.name.charAt(0)}
-                    </div>
-                    <span className="text-[10px] font-bold text-white">{h.name}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="grid grid-cols-3 gap-2">
+              {HOSTS.map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => setPlayerHost(h)}
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
+                    playerHost.id === h.id ? "border-[#FFC800] bg-[#FFC800]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.hairColor }}>
+                    {h.name.charAt(0)}
+                  </div>
+                  <span className="text-[10px] font-bold text-white">{h.name}</span>
+                </button>
+              ))}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-[#A1A1AA]">AI Opponent:</span>
-              <div className="grid grid-cols-3 gap-2">
-                {HOSTS.filter(h => h.id !== playerHost.id).map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() => setOpponentHost(h)}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      opponentHost.id === h.id ? "border-[#FF0000] bg-[#FF0000]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
-                    }`}
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.hairColor }}>
-                      {h.name.charAt(0)}
-                    </div>
-                    <span className="text-[10px] font-bold text-white">{h.name}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="grid grid-cols-3 gap-2">
+              {HOSTS.filter(h => h.id !== playerHost.id).map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => setOpponentHost(h)}
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${
+                    opponentHost.id === h.id ? "border-[#FF0000] bg-[#FF0000]/20 scale-105" : "border-[#27272A] bg-[#09090B]"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-md" style={{ backgroundColor: h.hairColor }}>
+                    {h.name.charAt(0)}
+                  </div>
+                  <span className="text-[10px] font-bold text-white">{h.name}</span>
+                </button>
+              ))}
             </div>
 
             <button
@@ -787,7 +762,8 @@ export default function ArcadeGame() {
               
               {/* Scoreboard Header */}
               <div className="flex justify-between items-center text-xs font-bold">
-                <span className="flex items-center gap-1.5" style={{ color: playerHost.color }}>
+                {/* Error Fix: Use hairColor instead of missing 'color' */}
+                <span className="flex items-center gap-1.5" style={{ color: playerHost.hairColor }}>
                   {playerHost.name} ({playerHp} HP)
                   <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white">
                     ⭐ {playerRoundWins}
@@ -798,7 +774,8 @@ export default function ArcadeGame() {
                   RD {currentRound} / 3
                 </span>
 
-                <span className="flex items-center gap-1.5" style={{ color: opponentHost.color }}>
+                {/* Error Fix: Use hairColor instead of missing 'color' */}
+                <span className="flex items-center gap-1.5" style={{ color: opponentHost.hairColor }}>
                   <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white">
                     ⭐ {aiRoundWins}
                   </span>
@@ -811,13 +788,13 @@ export default function ArcadeGame() {
                 <div className="flex-1 bg-[#09090B] h-3.5 rounded-full overflow-hidden border border-[#27272A]">
                   <div
                     className="h-full transition-all duration-200"
-                    style={{ width: `${playerHp}%`, backgroundColor: playerHost.color }}
+                    style={{ width: `${playerHp}%`, backgroundColor: playerHost.pantsColor }}
                   />
                 </div>
                 <div className="flex-1 bg-[#09090B] h-3.5 rounded-full overflow-hidden border border-[#27272A]">
                   <div
                     className="h-full transition-all duration-200"
-                    style={{ width: `${aiHp}%`, backgroundColor: opponentHost.color }}
+                    style={{ width: `${aiHp}%`, backgroundColor: opponentHost.pantsColor }}
                   />
                 </div>
               </div>
@@ -917,7 +894,7 @@ export default function ArcadeGame() {
                   </button>
                   <button
                     onClick={() => handleAction("block")}
-                    className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-[#FFC800] active:scale-95"
+                    className="py-2.5 bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] rounded-xl text-xs font-bold text-[#FFC800]"
                   >
                     🛡️ BLOCK
                   </button>
