@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 
-// Web Audio API Synth Engine for 8-Bit Retro Sound Effects
+// Retro Web Audio Synthesizer
 const playSynthSound = (type: "punch" | "kick" | "block" | "jump" | "ko" | "special" | "lightning" | "fire") => {
   if (typeof window === "undefined") return;
   try {
@@ -116,21 +116,51 @@ interface Fighter {
   id: string;
   name: string;
   color: string;
+  shirtColor: string;
+  pantsColor: string;
+  heightOffset: number; // Height adjustment
   x: number;
   y: number;
   vx: number;
   vy: number;
   hp: number;
-  specialMeter: number;
+  comboHits: number; // Tracks 3 consecutive hits for special unlock
   speed: number;
   state: "idle" | "punch" | "kick" | "jump" | "block" | "hit" | "special" | "walk";
   specialName: string;
 }
 
 const HOSTS = [
-  { id: "harshdeep", name: "Harshdeep", color: "#FFC800", speed: 3.5, special: "SUPER SANGRUR PUNCH" },
-  { id: "sarabjeet", name: "Sarabjeet", color: "#7000E0", speed: 2.0, special: "JANDPUR JAB" },
-  { id: "sandeep", name: "Sandeep", color: "#FF4500", speed: 4.0, special: "AWESOME AMBALA KICK" },
+  {
+    id: "harshdeep",
+    name: "Harshdeep",
+    color: "#FFC800",
+    shirtColor: "#18181B", // Black shirt
+    pantsColor: "#2563EB", // Blue pants
+    heightOffset: -8,       // Tallest fighter
+    speed: 3.5,
+    special: "SUPER SANGRUR PUNCH",
+  },
+  {
+    id: "sarabjeet",
+    name: "Sarabjeet",
+    color: "#7000E0",
+    shirtColor: "#EAB308", // Yellow shirt
+    pantsColor: "#09090B", // Black pants
+    heightOffset: 2,        // Shorter fighter
+    speed: 2.2,
+    special: "JANDPUR JAB",
+  },
+  {
+    id: "sandeep",
+    name: "Sandeep",
+    color: "#FF4500",
+    shirtColor: "#FAFAFA", // White shirt
+    pantsColor: "#D4A373", // Beige pants
+    heightOffset: 2,        // Shorter fighter
+    speed: 4.0,
+    special: "AWESOME AMBALA KICK",
+  },
 ];
 
 export default function ArcadeGame() {
@@ -148,8 +178,40 @@ export default function ArcadeGame() {
     player: Fighter;
     ai: Fighter;
   }>({
-    player: { id: "harshdeep", name: "Harshdeep", color: "#FFC800", x: 40, y: 120, vx: 0, vy: 0, hp: 100, specialMeter: 0, speed: 3.5, state: "idle", specialName: "SUPER SANGRUR PUNCH" },
-    ai: { id: "sarabjeet", name: "Sarabjeet", color: "#7000E0", x: 230, y: 120, vx: 0, vy: 0, hp: 100, specialMeter: 0, speed: 2.0, state: "idle", specialName: "JANDPUR JAB" },
+    player: {
+      id: "harshdeep",
+      name: "Harshdeep",
+      color: "#FFC800",
+      shirtColor: "#18181B",
+      pantsColor: "#2563EB",
+      heightOffset: -8,
+      x: 40,
+      y: 120,
+      vx: 0,
+      vy: 0,
+      hp: 100,
+      comboHits: 0,
+      speed: 3.5,
+      state: "idle",
+      specialName: "SUPER SANGRUR PUNCH",
+    },
+    ai: {
+      id: "sarabjeet",
+      name: "Sarabjeet",
+      color: "#7000E0",
+      shirtColor: "#EAB308",
+      pantsColor: "#09090B",
+      heightOffset: 2,
+      x: 230,
+      y: 120,
+      vx: 0,
+      vy: 0,
+      hp: 100,
+      comboHits: 0,
+      speed: 2.2,
+      state: "idle",
+      specialName: "JANDPUR JAB",
+    },
   });
 
   const triggerShake = () => {
@@ -167,14 +229,46 @@ export default function ArcadeGame() {
     setWinner(null);
 
     gameState.current = {
-      player: { id: p.id, name: p.name, color: p.color, x: 40, y: 120, vx: 0, vy: 0, hp: 100, specialMeter: 0, speed: p.speed, state: "idle", specialName: p.special },
-      ai: { id: o.id, name: o.name, color: o.color, x: 230, y: 120, vx: 0, vy: 0, hp: 100, specialMeter: 0, speed: o.speed, state: "idle", specialName: o.special },
+      player: {
+        id: p.id,
+        name: p.name,
+        color: p.color,
+        shirtColor: p.shirtColor,
+        pantsColor: p.pantsColor,
+        heightOffset: p.heightOffset,
+        x: 40,
+        y: 120 + p.heightOffset,
+        vx: 0,
+        vy: 0,
+        hp: 100,
+        comboHits: 0,
+        speed: p.speed,
+        state: "idle",
+        specialName: p.special,
+      },
+      ai: {
+        id: o.id,
+        name: o.name,
+        color: o.color,
+        shirtColor: o.shirtColor,
+        pantsColor: o.pantsColor,
+        heightOffset: o.heightOffset,
+        x: 230,
+        y: 120 + o.heightOffset,
+        vx: 0,
+        vy: 0,
+        hp: 100,
+        comboHits: 0,
+        speed: o.speed,
+        state: "idle",
+        specialName: o.special,
+      },
     };
 
     setGameStarted(true);
   };
 
-  // 60FPS Game Loop with Distinct AI Styles
+  // 60FPS Game Loop with Clever Reactive AI
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -189,55 +283,78 @@ export default function ArcadeGame() {
       const p = gameState.current.player;
       const ai = gameState.current.ai;
 
-      // Player Movement & Arena Bounds
+      const groundLevelP = 120 + p.heightOffset;
+      const groundLevelAI = 120 + ai.heightOffset;
+
+      // Player Movement Bounds
       p.x += p.vx;
       if (p.x < 10) p.x = 10;
       if (p.x > ai.x - 22) p.x = ai.x - 22;
 
-      // --- DYNAMIC AI PERSONALITIES ---
+      // --- ADVANCED SMART AI LOGIC ---
       const dist = Math.abs(p.x - ai.x);
 
-      // 1. HARSHDEEP AI (Athletic & Fast, Stays Away, Jumps & Defends)
-      if (ai.id === "harshdeep") {
-        if (dist < 45 && Math.random() > 0.82) {
-          ai.x += ai.speed; // Retreats backward
-          if (Math.random() > 0.7 && ai.y === 120) { ai.vy = -10; ai.state = "jump"; }
-        } else if (dist > 60 && Math.random() > 0.85) {
-          ai.x -= ai.speed;
+      // 1. AI Defends/Dodges when Player is attacking
+      if ((p.state === "punch" || p.state === "kick" || p.state === "special") && dist < 48) {
+        const aiDecision = Math.random();
+        if (aiDecision > 0.4) {
+          ai.state = "block"; // 60% chance to block player attack
+        } else if (aiDecision > 0.25 && ai.y === groundLevelAI) {
+          ai.vy = -10; // Jump dodge
+          ai.state = "jump";
         }
-      } 
-      // 2. SARABJEET AI (Slow Tank, Holds Ground, Attacks Hard inside range)
-      else if (ai.id === "sarabjeet") {
-        if (dist > 35 && Math.random() > 0.9) {
-          ai.x -= ai.speed; // Slow march forward
-        }
-      } 
-      // 3. SANDEEP AI (Cunning Rogue, Hit and Run)
-      else if (ai.id === "sandeep") {
-        if (dist > 35 && Math.random() > 0.75) {
-          ai.x -= ai.speed; // Quick approach
-        } else if (dist < 32 && Math.random() > 0.8) {
-          ai.x += ai.speed * 1.2; // Fast hit-and-run exit
-          if (ai.y === 120 && Math.random() > 0.6) { ai.vy = -9; ai.state = "jump"; }
+      } else if (ai.state === "block" && p.state === "idle") {
+        ai.state = "idle";
+      }
+
+      // 2. AI Adaptive Offensive Positioning
+      if (ai.state !== "block") {
+        if (ai.id === "harshdeep") {
+          // Athletic: Stays out of range, steps in for quick snipes
+          if (dist < 42 && Math.random() > 0.75) {
+            ai.x += ai.speed; // Retreat
+          } else if (dist > 55 && Math.random() > 0.8) {
+            ai.x -= ai.speed; // Approach
+          }
+        } else if (ai.id === "sarabjeet") {
+          // Heavy Tank: Holds center, slow pressure
+          if (dist > 32 && Math.random() > 0.85) {
+            ai.x -= ai.speed;
+          }
+        } else if (ai.id === "sandeep") {
+          // Cunning: Fast dash-in, hit & jump-out
+          if (dist > 35 && Math.random() > 0.7) {
+            ai.x -= ai.speed;
+          } else if (dist < 28 && Math.random() > 0.75) {
+            ai.x += ai.speed * 1.2;
+          }
         }
       }
 
       if (ai.x > 250) ai.x = 250;
 
       // Gravity Physics
-      if (p.y < 120) p.vy += 0.8;
+      if (p.y < groundLevelP) p.vy += 0.8;
       p.y += p.vy;
-      if (p.y >= 120) { p.y = 120; p.vy = 0; if (p.state === "jump") p.state = "idle"; }
+      if (p.y >= groundLevelP) {
+        p.y = groundLevelP;
+        p.vy = 0;
+        if (p.state === "jump") p.state = "idle";
+      }
 
-      if (ai.y < 120) ai.vy += 0.8;
+      if (ai.y < groundLevelAI) ai.vy += 0.8;
       ai.y += ai.vy;
-      if (ai.y >= 120) { ai.y = 120; ai.vy = 0; if (ai.state === "jump") ai.state = "idle"; }
+      if (ai.y >= groundLevelAI) {
+        ai.y = groundLevelAI;
+        ai.vy = 0;
+        if (ai.state === "jump") ai.state = "idle";
+      }
 
       // Clear Arena Canvas
       ctx.fillStyle = "#09090B";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Octagon Mat & Fence
+      // Octagon Mat & Cage Line
       ctx.fillStyle = "#18181C";
       ctx.fillRect(0, 160, canvas.width, 40);
       ctx.strokeStyle = "#27272A";
@@ -248,39 +365,43 @@ export default function ArcadeGame() {
         ctx.save();
         ctx.translate(f.x, f.y);
 
+        // Height adjustment factor
+        const torsoHeight = f.id === "harshdeep" ? 14 : 10;
+        const legHeight = f.id === "harshdeep" ? 10 : 7;
+
         // Ground Shadow
         ctx.fillStyle = "rgba(0,0,0,0.5)";
         ctx.beginPath();
-        ctx.ellipse(15, 42, 12, 4, 0, 0, Math.PI * 2);
+        ctx.ellipse(15, 38 + legHeight, 12, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Turban / Hair Accent
         ctx.fillStyle = f.color;
         ctx.fillRect(8, 0, 14, 10);
 
-        // Skin Tone
+        // Skin Tone Face
         ctx.fillStyle = "#E0A96D";
         ctx.fillRect(10, 10, 10, 8);
 
-        // Shorts
-        ctx.fillStyle = f.color;
-        ctx.fillRect(8, 26, 14, 10);
+        // Custom Shirt
+        ctx.fillStyle = f.shirtColor;
+        ctx.fillRect(8, 18, 14, torsoHeight);
+
+        // Custom Pants
+        ctx.fillStyle = f.pantsColor;
+        ctx.fillRect(8, 18 + torsoHeight, 14, 8);
 
         // Legs
         ctx.fillStyle = "#E0A96D";
-        ctx.fillRect(10, 36, 4, 8);
-        ctx.fillRect(16, 36, 4, 8);
+        ctx.fillRect(10, 26 + torsoHeight, 4, legHeight);
+        ctx.fillRect(16, 26 + torsoHeight, 4, legHeight);
 
-        // Torso
-        ctx.fillStyle = "#C88A4B";
-        ctx.fillRect(8, 18, 14, 10);
-
-        // Action Frames
+        // Action Frames (Arms)
         ctx.fillStyle = "#E0A96D";
         if (f.state === "punch") {
           ctx.fillRect(isFacingRight ? 18 : -8, 18, 16, 5);
         } else if (f.state === "kick") {
-          ctx.fillRect(isFacingRight ? 18 : -10, 32, 16, 6);
+          ctx.fillRect(isFacingRight ? 18 : -10, 24 + torsoHeight, 16, 6);
         } else if (f.state === "special") {
           ctx.fillStyle = f.id === "sandeep" ? "#00E5FF" : "#FFC800";
           ctx.fillRect(isFacingRight ? 18 : -16, 14, 24, 14);
@@ -297,7 +418,7 @@ export default function ArcadeGame() {
       drawFighter(p, true);
       drawFighter(ai, false);
 
-      // Render FX Particles (Fire & Lightning)
+      // Render FX Particles
       particles.current.forEach((part, index) => {
         ctx.fillStyle = part.color;
         ctx.font = "bold 10px monospace";
@@ -345,7 +466,7 @@ export default function ArcadeGame() {
     const p = gameState.current.player;
     const ai = gameState.current.ai;
 
-    if (action === "jump" && p.y === 120) {
+    if (action === "jump" && p.y === 120 + p.heightOffset) {
       playSynthSound("jump");
       p.vy = -10.5;
       p.state = "jump";
@@ -358,32 +479,29 @@ export default function ArcadeGame() {
       return;
     }
 
-    if (action === "special" && p.specialMeter < 100) return;
+    if (action === "special" && p.comboHits < 3) return;
 
     p.state = action;
 
     const distance = Math.abs((p.x + 15) - (ai.x + 15));
 
-    // SPECIAL ATTACKS LOGIC
-    if (action === "special" && distance < 45) {
-      p.specialMeter = 0;
+    // SPECIAL ATTACK UNLOCKED AT 3 HITS
+    if (action === "special" && distance < 48) {
+      p.comboHits = 0; // Reset streak
       triggerShake();
 
       if (p.id === "harshdeep") {
-        // Super Sangrur Punch: Double Strike + Fire + Shake
         playSynthSound("fire");
-        ai.hp = Math.max(0, ai.hp - 28);
-        addParticle(ai.x, ai.y, "🔥 SANGRUR DOUBLE PUNCH! -28", "#FFC800", "fire");
+        ai.hp = Math.max(0, ai.hp - 35);
+        addParticle(ai.x, ai.y, "🔥 SANGRUR DOUBLE PUNCH! -35", "#FFC800", "fire");
       } else if (p.id === "sarabjeet") {
-        // Jandpur Jab: Double Strike + Heavy Shake
         playSynthSound("punch");
-        ai.hp = Math.max(0, ai.hp - 30);
-        addParticle(ai.x, ai.y, "🥊 JANDPUR DOUBLE JAB! -30", "#7000E0", "normal");
+        ai.hp = Math.max(0, ai.hp - 35);
+        addParticle(ai.x, ai.y, "🥊 JANDPUR DOUBLE JAB! -35", "#7000E0", "normal");
       } else if (p.id === "sandeep") {
-        // Awesome Ambala Kick: Double Damage + Lightning
         playSynthSound("lightning");
-        ai.hp = Math.max(0, ai.hp - 40);
-        addParticle(ai.x, ai.y, "⚡ AMBALA LIGHTNING KICK! -40", "#00E5FF", "lightning");
+        ai.hp = Math.max(0, ai.hp - 45);
+        addParticle(ai.x, ai.y, "⚡ AMBALA LIGHTNING KICK! -45", "#00E5FF", "lightning");
       }
 
       ai.state = "hit";
@@ -394,12 +512,13 @@ export default function ArcadeGame() {
         return;
       }
     } 
-    // BASIC ATTACKS
+    // REGULAR ATTACKS
     else if ((action === "punch" || action === "kick") && distance < 42) {
       if (ai.state !== "block") {
         let dmg = action === "punch" ? 12 : 16;
         playSynthSound(action);
-        p.specialMeter = Math.min(100, p.specialMeter + 34);
+        
+        p.comboHits = Math.min(3, p.comboHits + 1); // Increment hit streak
         ai.hp = Math.max(0, ai.hp - dmg);
         ai.state = "hit";
         addParticle(ai.x + 10, ai.y, `-${dmg}`, "#FFC800");
@@ -412,18 +531,22 @@ export default function ArcadeGame() {
         }
       } else {
         playSynthSound("block");
+        p.comboHits = 0; // Block resets streak
         addParticle(ai.x + 10, ai.y, "BLOCKED!", "#A1A1AA");
       }
+    } else if (action === "punch" || action === "kick") {
+      p.comboHits = 0; // Whiffing attack resets streak
     }
 
-    // AI COUNTER ATTACK REACTION
+    // AI SMART COUNTER-ATTACK REACTION
     setTimeout(() => {
       const currentDist = Math.abs((p.x + 15) - (ai.x + 15));
-      if (ai.hp > 0 && Math.random() > 0.4 && currentDist < 42) {
+      if (ai.hp > 0 && currentDist < 42 && Math.random() > 0.35) {
         if (p.state !== "block") {
-          let aiDmg = ai.id === "sarabjeet" ? 16 : 11; // Sarabjeet hits harder!
+          let aiDmg = ai.id === "sarabjeet" ? 18 : 12; // Sarabjeet hits hard
           playSynthSound("punch");
           p.hp = Math.max(0, p.hp - aiDmg);
+          p.comboHits = 0; // Getting hit resets your streak!
           p.state = "hit";
           addParticle(p.x + 10, p.y, `-${aiDmg}`, "#FF0000");
 
@@ -440,7 +563,7 @@ export default function ArcadeGame() {
 
       if (p.state !== "jump" && p.state !== "walk") p.state = "idle";
       if (ai.state !== "jump") ai.state = "idle";
-    }, 280);
+    }, 260);
   };
 
   return (
@@ -533,7 +656,7 @@ export default function ArcadeGame() {
           </div>
         )}
 
-        {/* 60FPS CANVAS ARENA WITH SPECIAL MOVES */}
+        {/* 60FPS CANVAS ARENA */}
         {gameStarted && (
           <div className="flex flex-col gap-3">
             
@@ -560,17 +683,17 @@ export default function ArcadeGame() {
                 </div>
               </div>
 
-              {/* Player Special Charge Meter */}
+              {/* 3-Hit Consecutive Streak Power Bar */}
               <div className="flex items-center justify-between text-[10px] text-[#A1A1AA]">
-                <span>SUPER METER</span>
+                <span>CONSECUTIVE HIT STREAK</span>
                 <span className="text-[#FFC800] font-bold">
-                  {gameState.current.player.specialMeter >= 100 ? "🔥 READY!" : `${gameState.current.player.specialMeter}%`}
+                  {gameState.current.player.comboHits >= 3 ? "🔥 SUPER POWER UNLOCKED!" : `${gameState.current.player.comboHits} / 3 HITS`}
                 </span>
               </div>
               <div className="w-full bg-[#09090B] h-2 rounded-full overflow-hidden border border-[#27272A]">
                 <div
                   className="h-full transition-all duration-300 bg-gradient-to-r from-[#FFC800] to-[#FF0000]"
-                  style={{ width: `${gameState.current.player.specialMeter}%` }}
+                  style={{ width: `${(gameState.current.player.comboHits / 3) * 100}%` }}
                 />
               </div>
             </div>
@@ -591,14 +714,14 @@ export default function ArcadeGame() {
               {/* Special Move Trigger Button */}
               <button
                 onClick={() => handleAction("special")}
-                disabled={gameState.current.player.specialMeter < 100}
+                disabled={gameState.current.player.comboHits < 3}
                 className={`w-full py-3 rounded-xl text-xs font-black tracking-wider transition-all shadow-lg ${
-                  gameState.current.player.specialMeter >= 100
-                    ? "bg-gradient-to-r from-[#FFC800] to-[#FF4500] text-black active:scale-95 animate-pulse"
+                  gameState.current.player.comboHits >= 3
+                    ? "bg-gradient-to-r from-[#FFC800] to-[#FF4500] text-black active:scale-95 animate-pulse cursor-pointer"
                     : "bg-[#141417] text-[#52525B] border border-[#27272A] cursor-not-allowed"
                 }`}
               >
-                🔥 {playerHost.special} (SPECIAL MOVE)
+                🔥 {playerHost.special} (UNLOCKED AT 3 HITS)
               </button>
 
               <div className="flex gap-2">
