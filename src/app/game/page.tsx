@@ -118,13 +118,13 @@ interface Fighter {
   color: string;
   shirtColor: string;
   pantsColor: string;
-  heightOffset: number; // Height adjustment
+  heightOffset: number;
   x: number;
   y: number;
   vx: number;
   vy: number;
   hp: number;
-  comboHits: number; // Tracks 3 consecutive hits for special unlock
+  comboHits: number;
   speed: number;
   state: "idle" | "punch" | "kick" | "jump" | "block" | "hit" | "special" | "walk";
   specialName: string;
@@ -137,7 +137,7 @@ const HOSTS = [
     color: "#FFC800",
     shirtColor: "#18181B", // Black shirt
     pantsColor: "#2563EB", // Blue pants
-    heightOffset: -8,       // Tallest fighter
+    heightOffset: -8,       // Tallest
     speed: 3.5,
     special: "SUPER SANGRUR PUNCH",
   },
@@ -147,7 +147,7 @@ const HOSTS = [
     color: "#7000E0",
     shirtColor: "#EAB308", // Yellow shirt
     pantsColor: "#09090B", // Black pants
-    heightOffset: 2,        // Shorter fighter
+    heightOffset: 2,        // Shorter
     speed: 2.2,
     special: "JANDPUR JAB",
   },
@@ -157,7 +157,7 @@ const HOSTS = [
     color: "#FF4500",
     shirtColor: "#FAFAFA", // White shirt
     pantsColor: "#D4A373", // Beige pants
-    heightOffset: 2,        // Shorter fighter
+    heightOffset: 2,        // Shorter
     speed: 4.0,
     special: "AWESOME AMBALA KICK",
   },
@@ -171,6 +171,11 @@ export default function ArcadeGame() {
   const [gameStarted, setGameStarted] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
   const [screenShake, setScreenShake] = useState(false);
+
+  // Dedicated React state for live HP rendering
+  const [playerHp, setPlayerHp] = useState(100);
+  const [aiHp, setAiHp] = useState(100);
+  const [comboHits, setComboHits] = useState(0);
 
   const particles = useRef<VisualParticle[]>([]);
 
@@ -227,6 +232,9 @@ export default function ArcadeGame() {
     setPlayerHost(p);
     setOpponentHost(o);
     setWinner(null);
+    setPlayerHp(100);
+    setAiHp(100);
+    setComboHits(0);
 
     gameState.current = {
       player: {
@@ -268,7 +276,7 @@ export default function ArcadeGame() {
     setGameStarted(true);
   };
 
-  // 60FPS Game Loop with Clever Reactive AI
+  // 60FPS Game Loop
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -294,35 +302,32 @@ export default function ArcadeGame() {
       // --- ADVANCED SMART AI LOGIC ---
       const dist = Math.abs(p.x - ai.x);
 
-      // 1. AI Defends/Dodges when Player is attacking
+      // AI Defense / Dodging
       if ((p.state === "punch" || p.state === "kick" || p.state === "special") && dist < 48) {
         const aiDecision = Math.random();
         if (aiDecision > 0.4) {
-          ai.state = "block"; // 60% chance to block player attack
+          ai.state = "block";
         } else if (aiDecision > 0.25 && ai.y === groundLevelAI) {
-          ai.vy = -10; // Jump dodge
+          ai.vy = -10;
           ai.state = "jump";
         }
       } else if (ai.state === "block" && p.state === "idle") {
         ai.state = "idle";
       }
 
-      // 2. AI Adaptive Offensive Positioning
+      // AI Positioning Strategy
       if (ai.state !== "block") {
         if (ai.id === "harshdeep") {
-          // Athletic: Stays out of range, steps in for quick snipes
           if (dist < 42 && Math.random() > 0.75) {
-            ai.x += ai.speed; // Retreat
+            ai.x += ai.speed;
           } else if (dist > 55 && Math.random() > 0.8) {
-            ai.x -= ai.speed; // Approach
+            ai.x -= ai.speed;
           }
         } else if (ai.id === "sarabjeet") {
-          // Heavy Tank: Holds center, slow pressure
           if (dist > 32 && Math.random() > 0.85) {
             ai.x -= ai.speed;
           }
         } else if (ai.id === "sandeep") {
-          // Cunning: Fast dash-in, hit & jump-out
           if (dist > 35 && Math.random() > 0.7) {
             ai.x -= ai.speed;
           } else if (dist < 28 && Math.random() > 0.75) {
@@ -365,7 +370,6 @@ export default function ArcadeGame() {
         ctx.save();
         ctx.translate(f.x, f.y);
 
-        // Height adjustment factor
         const torsoHeight = f.id === "harshdeep" ? 14 : 10;
         const legHeight = f.id === "harshdeep" ? 10 : 7;
 
@@ -375,7 +379,7 @@ export default function ArcadeGame() {
         ctx.ellipse(15, 38 + legHeight, 12, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Turban / Hair Accent
+        // Turban / Hair
         ctx.fillStyle = f.color;
         ctx.fillRect(8, 0, 14, 10);
 
@@ -485,26 +489,31 @@ export default function ArcadeGame() {
 
     const distance = Math.abs((p.x + 15) - (ai.x + 15));
 
-    // SPECIAL ATTACK UNLOCKED AT 3 HITS
+    // SPECIAL ATTACKS LOGIC
     if (action === "special" && distance < 48) {
-      p.comboHits = 0; // Reset streak
+      p.comboHits = 0;
+      setComboHits(0);
       triggerShake();
 
+      let dmg = 35;
       if (p.id === "harshdeep") {
         playSynthSound("fire");
-        ai.hp = Math.max(0, ai.hp - 35);
+        dmg = 35;
         addParticle(ai.x, ai.y, "🔥 SANGRUR DOUBLE PUNCH! -35", "#FFC800", "fire");
       } else if (p.id === "sarabjeet") {
         playSynthSound("punch");
-        ai.hp = Math.max(0, ai.hp - 35);
+        dmg = 35;
         addParticle(ai.x, ai.y, "🥊 JANDPUR DOUBLE JAB! -35", "#7000E0", "normal");
       } else if (p.id === "sandeep") {
         playSynthSound("lightning");
-        ai.hp = Math.max(0, ai.hp - 45);
+        dmg = 45;
         addParticle(ai.x, ai.y, "⚡ AMBALA LIGHTNING KICK! -45", "#00E5FF", "lightning");
       }
 
+      ai.hp = Math.max(0, ai.hp - dmg);
+      setAiHp(ai.hp);
       ai.state = "hit";
+
       if (ai.hp <= 0) {
         playSynthSound("ko");
         setWinner(`${playerHost.name} KNOCKED OUT ${opponentHost.name}!`);
@@ -518,8 +527,11 @@ export default function ArcadeGame() {
         let dmg = action === "punch" ? 12 : 16;
         playSynthSound(action);
         
-        p.comboHits = Math.min(3, p.comboHits + 1); // Increment hit streak
+        p.comboHits = Math.min(3, p.comboHits + 1);
+        setComboHits(p.comboHits);
+
         ai.hp = Math.max(0, ai.hp - dmg);
+        setAiHp(ai.hp);
         ai.state = "hit";
         addParticle(ai.x + 10, ai.y, `-${dmg}`, "#FFC800");
 
@@ -531,22 +543,28 @@ export default function ArcadeGame() {
         }
       } else {
         playSynthSound("block");
-        p.comboHits = 0; // Block resets streak
+        p.comboHits = 0;
+        setComboHits(0);
         addParticle(ai.x + 10, ai.y, "BLOCKED!", "#A1A1AA");
       }
     } else if (action === "punch" || action === "kick") {
-      p.comboHits = 0; // Whiffing attack resets streak
+      p.comboHits = 0;
+      setComboHits(0);
     }
 
-    // AI SMART COUNTER-ATTACK REACTION
+    // AI COUNTER ATTACK REACTION
     setTimeout(() => {
       const currentDist = Math.abs((p.x + 15) - (ai.x + 15));
       if (ai.hp > 0 && currentDist < 42 && Math.random() > 0.35) {
         if (p.state !== "block") {
-          let aiDmg = ai.id === "sarabjeet" ? 18 : 12; // Sarabjeet hits hard
+          let aiDmg = ai.id === "sarabjeet" ? 18 : 12;
           playSynthSound("punch");
           p.hp = Math.max(0, p.hp - aiDmg);
-          p.comboHits = 0; // Getting hit resets your streak!
+          setPlayerHp(p.hp);
+
+          p.comboHits = 0;
+          setComboHits(0);
+
           p.state = "hit";
           addParticle(p.x + 10, p.y, `-${aiDmg}`, "#FF0000");
 
@@ -663,37 +681,41 @@ export default function ArcadeGame() {
             {/* Health & Special Meters */}
             <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-4 flex flex-col gap-2.5">
               <div className="flex justify-between text-xs font-bold">
-                <span style={{ color: playerHost.color }}>{playerHost.name}</span>
-                <span style={{ color: opponentHost.color }}>{opponentHost.name}</span>
+                <span style={{ color: playerHost.color }}>
+                  {playerHost.name} ({playerHp} HP)
+                </span>
+                <span style={{ color: opponentHost.color }}>
+                  {opponentHost.name} ({aiHp} HP)
+                </span>
               </div>
 
-              {/* Health Bars */}
+              {/* Real-time Draining Health Bars */}
               <div className="flex gap-2">
-                <div className="flex-1 bg-[#09090B] h-3 rounded-full overflow-hidden border border-[#27272A]">
+                <div className="flex-1 bg-[#09090B] h-3.5 rounded-full overflow-hidden border border-[#27272A]">
                   <div
                     className="h-full transition-all duration-200"
-                    style={{ width: `${gameState.current.player.hp}%`, backgroundColor: playerHost.color }}
+                    style={{ width: `${playerHp}%`, backgroundColor: playerHost.color }}
                   />
                 </div>
-                <div className="flex-1 bg-[#09090B] h-3 rounded-full overflow-hidden border border-[#27272A]">
+                <div className="flex-1 bg-[#09090B] h-3.5 rounded-full overflow-hidden border border-[#27272A]">
                   <div
                     className="h-full transition-all duration-200"
-                    style={{ width: `${gameState.current.ai.hp}%`, backgroundColor: opponentHost.color }}
+                    style={{ width: `${aiHp}%`, backgroundColor: opponentHost.color }}
                   />
                 </div>
               </div>
 
-              {/* 3-Hit Consecutive Streak Power Bar */}
+              {/* 3-Hit Streak Power Bar */}
               <div className="flex items-center justify-between text-[10px] text-[#A1A1AA]">
-                <span>CONSECUTIVE HIT STREAK</span>
+                <span>SUPER POWER STREAK</span>
                 <span className="text-[#FFC800] font-bold">
-                  {gameState.current.player.comboHits >= 3 ? "🔥 SUPER POWER UNLOCKED!" : `${gameState.current.player.comboHits} / 3 HITS`}
+                  {comboHits >= 3 ? "🔥 SUPER POWER READY!" : `${comboHits} / 3 HITS`}
                 </span>
               </div>
               <div className="w-full bg-[#09090B] h-2 rounded-full overflow-hidden border border-[#27272A]">
                 <div
                   className="h-full transition-all duration-300 bg-gradient-to-r from-[#FFC800] to-[#FF0000]"
-                  style={{ width: `${(gameState.current.player.comboHits / 3) * 100}%` }}
+                  style={{ width: `${(comboHits / 3) * 100}%` }}
                 />
               </div>
             </div>
@@ -711,12 +733,12 @@ export default function ArcadeGame() {
             {/* CONTROLS */}
             <div className="flex flex-col gap-2">
               
-              {/* Special Move Trigger Button */}
+              {/* Special Move Button */}
               <button
                 onClick={() => handleAction("special")}
-                disabled={gameState.current.player.comboHits < 3}
+                disabled={comboHits < 3}
                 className={`w-full py-3 rounded-xl text-xs font-black tracking-wider transition-all shadow-lg ${
-                  gameState.current.player.comboHits >= 3
+                  comboHits >= 3
                     ? "bg-gradient-to-r from-[#FFC800] to-[#FF4500] text-black active:scale-95 animate-pulse cursor-pointer"
                     : "bg-[#141417] text-[#52525B] border border-[#27272A] cursor-not-allowed"
                 }`}
