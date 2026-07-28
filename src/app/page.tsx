@@ -47,7 +47,7 @@ const SocialIcon = ({ name }: { name: string }) => {
   }
 };
 
-// --- TYPES FOR LIVE EPISODE DATA ---
+// Types for episode data
 interface EpisodeData {
   title: string;
   pubDate: string;
@@ -63,6 +63,42 @@ const placeholderEpisode: EpisodeData = {
   youtubeId: "ES6ONFKyEgM",
   embedUrl: "https://open.spotify.com/embed/show/3voSKp0xDQSbzMNVxf239H?utm_source=generator",
 };
+
+// 1:1 Square Show Poster Placeholders
+const UPCOMING_SHOWS = [
+  {
+    id: "show-1",
+    title: "LIVE IN CHANDIGARH",
+    date: "AUG 15 • 7:00 PM",
+    venue: "Tagore Theatre",
+    tag: "TICKETS FAST SELLING",
+    color: "from-[#FFC800]/20 to-[#FF4500]/20",
+  },
+  {
+    id: "show-2",
+    title: "TORONTO SPECIAL TAPING",
+    date: "SEP 02 • 8:00 PM",
+    venue: "The Danforth Music Hall",
+    tag: "WORLD TOUR",
+    color: "from-[#7000E0]/20 to-[#2563EB]/20",
+  },
+  {
+    id: "show-3",
+    title: "AMBALA COMEDY NIGHT",
+    date: "SEP 20 • 6:30 PM",
+    venue: "City Club Arena",
+    tag: "FILLING FAST",
+    color: "from-[#10B981]/20 to-[#059669]/20",
+  },
+  {
+    id: "show-4",
+    title: "DELHI AUDITORIUM SHOW",
+    date: "OCT 05 • 7:30 PM",
+    venue: "Siri Fort Auditorium",
+    tag: "JUST ANNOUNCED",
+    color: "from-[#EC4899]/20 to-[#8B5CF6]/20",
+  },
+];
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"youtube" | "spotify">("youtube");
@@ -247,6 +283,56 @@ export default function Home() {
                   <div className="text-[9px] text-[#A1A1AA] truncate">{social.handle}</div>
                 </div>
               </a>
+            ))}
+          </div>
+        </section>
+
+        {/* --- SECTION 5: ANIMATED UPCOMING SHOWS CAROUSEL (1:1 POSTERS) --- */}
+        <section className="flex flex-col gap-3 overflow-hidden">
+          <div className="flex justify-between items-center text-xs font-semibold text-[#A1A1AA] tracking-wider">
+            <span>UPCOMING SHOWS & TOURS</span>
+            <span className="text-[#FFC800] text-[10px]">SWIPE ➔</span>
+          </div>
+
+          {/* Smooth Horizontal Scroll Container with Touch Support */}
+          <div className="flex gap-3 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scrollbar-none scroll-smooth">
+            {UPCOMING_SHOWS.map((show) => (
+              <div
+                key={show.id}
+                className="snap-center shrink-0 w-[220px] aspect-square rounded-2xl bg-[#141417] border border-[#27272A] hover:border-[#FFC800]/50 transition-all p-4 flex flex-col justify-between relative overflow-hidden group shadow-lg"
+              >
+                {/* Decorative Background Gradient Placeholder for 1:1 Poster */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${show.color} opacity-40 group-hover:opacity-70 transition-opacity`} />
+                
+                {/* 1:1 Poster Badge */}
+                <div className="relative z-10 flex justify-between items-start">
+                  <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FFC800] text-black shadow-md">
+                    {show.tag}
+                  </span>
+                  <span className="text-xs text-[#A1A1AA] font-mono">1:1 POSTER</span>
+                </div>
+
+                {/* Show Details Overlay */}
+                <div className="relative z-10 flex flex-col gap-1">
+                  <h3 className="text-sm font-black text-white leading-tight group-hover:text-[#FFC800] transition-colors">
+                    {show.title}
+                  </h3>
+                  <p className="text-[11px] font-bold text-[#FFC800]">
+                    {show.date}
+                  </p>
+                  <p className="text-[10px] text-[#A1A1AA] truncate">
+                    📍 {show.venue}
+                  </p>
+                </div>
+
+                {/* Ticket Action Button */}
+                <button
+                  onClick={() => alert(`Tickets for ${show.title} coming soon!`)}
+                  className="relative z-10 w-full py-1.5 bg-white/10 hover:bg-[#FFC800] hover:text-black border border-white/10 text-white font-bold text-[10px] rounded-xl transition-all active:scale-95 text-center"
+                >
+                  GET TICKETS
+                </button>
+              </div>
             ))}
           </div>
         </section>
