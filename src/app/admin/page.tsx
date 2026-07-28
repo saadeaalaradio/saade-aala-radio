@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useRef } from "react";
-import { initialSiteConfig, HostProfile, SocialLink, StoryPost } from "@/lib/siteData";
+import { initialSiteConfig, HostProfile, SocialLink, StoryPost } from "../../lib/siteData";
 
 export default function AdminCMS() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
