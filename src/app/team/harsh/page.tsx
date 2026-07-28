@@ -15,7 +15,7 @@ interface TeamMember {
   id: string;
   name: string;
   role: string;
-  image: string; // PNG path (e.g. /hosts/harshdeep.png)
+  image: string;
   accentColor: string;
   journey: string;
   quote: string;
@@ -32,7 +32,7 @@ const TEAM_DATA: Record<string, TeamMember> = {
     id: "harshdeep",
     name: "Harshdeep Singh",
     role: "Lead Anchor & Chaos Director",
-    image: "/hosts/harshdeep.png", // Replace with your PNG in /public folder
+    image: "/hosts/harshdeep.png",
     accentColor: "#FFC800",
     journey:
       "From running wild production sets to co-founding Saade Aala Radio, Harshdeep brings the unfiltered energy and chaotic stories that keep every episode completely unpredictable.",
@@ -104,10 +104,13 @@ const TEAM_DATA: Record<string, TeamMember> = {
 export default function TeamMemberPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id?: string }>;
 }) {
   const resolvedParams = use(params);
-  const hostId = resolvedParams.id.toLowerCase();
+  
+  // Safe Fallback Resolution to avoid undefined `.toLowerCase()` errors during prerender
+  const rawId = resolvedParams?.id ?? "harshdeep";
+  const hostId = rawId.toLowerCase();
   const host = TEAM_DATA[hostId] || TEAM_DATA["harshdeep"];
 
   // Ask Question Drawer State
@@ -120,7 +123,6 @@ export default function TeamMemberPage({
     e.preventDefault();
     if (!questionText.trim()) return;
 
-    // Here you can connect your notification service (e.g. EmailJS or Telegram Bot API)
     setSubmitted(true);
     setTimeout(() => {
       setShowAskForm(false);
@@ -164,7 +166,6 @@ export default function TeamMemberPage({
 
           {/* Host PNG Container */}
           <div className="relative w-36 h-36 mb-4 rounded-2xl bg-[#09090B] border-2 border-[#27272A] overflow-hidden flex items-center justify-center shadow-xl group">
-            {/* Replace this placeholder div with real <img src={host.image} /> when PNGs are uploaded */}
             <div
               className="w-full h-full flex items-center justify-center font-black text-4xl text-white opacity-80"
               style={{ backgroundColor: host.accentColor }}
@@ -221,7 +222,7 @@ export default function TeamMemberPage({
             </p>
           </div>
 
-          {/* 1 Funny Quote Box */}
+          {/* Funny Quote Box */}
           <div
             className="p-5 rounded-2xl border-l-4 bg-[#141417] border-[#27272A] shadow-md"
             style={{ borderLeftColor: host.accentColor }}
