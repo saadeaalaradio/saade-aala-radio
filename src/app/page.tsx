@@ -1,34 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-// --- TYPES FOR LIVE RSS FEED SYNC ---
-// We will activate the fetching logic once we have your Spotify RSS URL.
+// --- TYPES FOR LIVE EPISODE DATA ---
 interface EpisodeData {
   title: string;
   pubDate: string;
-  link: string; // Spotify episode link
-  youtubeId?: string; // We can parse this from the RSS if you include YT links
-  embedUrl?: string; // Generated Spotify Embed URL
+  link?: string;       // Made optional so TypeScript won't strictly enforce it
+  youtubeId?: string;
+  embedUrl?: string;
 }
 
-// Placeholder data (Used until RSS feed is connected)
-const placeholderEpisode = {
+// Placeholder episode object with all required properties included
+const placeholderEpisode: EpisodeData = {
   title: "Episode Placeholder: Need your Spotify RSS Feed URL to Auto-Sync!",
   pubDate: "May 15, 2024",
-  youtubeId: "ES6ONFKyEgM", // A default placeholder video ID
-  embedUrl: "https://open.spotify.com/embed/episode/7f5e3d2c1b?utm_source=generator",
+  link: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H",
+  youtubeId: "ES6ONFKyEgM",
+  embedUrl: "https://open.spotify.com/embed/show/3voSKp0xDQSbzMNVxf239H?utm_source=generator",
 };
 
 export default function Home() {
   // --- STATE MANAGEMENT ---
   const [activeTab, setActiveTab] = useState<"youtube" | "spotify">("youtube");
-  const [episode, setEpisode] = useState<EpisodeData>(placeholderEpisode);
-  const [loading, setLoading] = useState(false); // Set to false for static preview
+  const [episode] = useState<EpisodeData>(placeholderEpisode);
+  const [loading] = useState(false);
 
   // --- INTERACTIVE SOUNDBOARD ENGINE ---
-  // In Vercel 2.0, we will replace alerts with Web Audio synthesis.
   const playSound = (soundDescription: string) => {
     alert(`🔊 Playing Sound Effect: ${soundDescription}`);
   };
@@ -55,8 +54,7 @@ export default function Home() {
           </Link>
         </header>
 
-        {/* --- SECTION 1: THE DUAL MEDIA PLAYER (REQUIRED) --- */}
-        {/* This block is coded to eventually auto-sync with Spotify RSS Feed */}
+        {/* --- SECTION 1: THE DUAL MEDIA PLAYER (YOUTUBE + SPOTIFY) --- */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#18181C] to-[#141417] border border-[#27272A] p-6 shadow-2xl">
           <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#FFC800]/10 blur-3xl rounded-full pointer-events-none" />
 
@@ -126,7 +124,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- SECTION 2: FUN SOUNDBOARDS (COMEDY HUB REQUIREMENT) --- */}
+        {/* --- SECTION 2: FUN SOUNDBOARDS --- */}
         <section className="flex flex-col gap-3">
           <div className="flex justify-between items-center text-xs font-semibold text-[#A1A1AA] tracking-wider">
             <span>FUN SOUNDBOARD</span>
@@ -152,7 +150,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- SECTION 3: MMA GAME SPOTLIGHT (THE BENCHMARK) --- */}
+        {/* --- SECTION 3: MMA GAME SPOTLIGHT --- */}
         <section>
           <Link
             href="/game"
@@ -175,7 +173,7 @@ export default function Home() {
           </Link>
         </section>
 
-        {/* --- SECTION 4: SOCIAL MEDIA (ALL REQUIRED LINKS ADDED) --- */}
+        {/* --- SECTION 4: ALL 6 SOCIAL MEDIA LINKS --- */}
         <section className="flex flex-col gap-3">
           <div className="text-xs font-semibold text-[#A1A1AA] tracking-wider">
             CONNECT & SUBSCRIBE
