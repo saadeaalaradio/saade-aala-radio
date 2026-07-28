@@ -1,15 +1,95 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
-import { initialSiteConfig, HostProfile, SocialLink, StoryPost } from "../../lib/siteData";
+import { useState, useRef, useEffect } from "react";
+
+// --- TYPES & DATA SCHEMA ---
+export interface SocialLink {
+  platform: string;
+  url: string;
+}
+
+export interface HostProfile {
+  id: string;
+  name: string;
+  role: string;
+  photoUrl: string;
+  journey: string;
+  quote: string;
+  socials: SocialLink[];
+}
+
+export interface StoryPost {
+  id: string;
+  title: string;
+  author: string;
+  date: string;
+  readTime: string;
+  thumbnailUrl: string;
+  summary: string;
+  contentHtml: string;
+  seoTitle: string;
+  seoDescription: string;
+  searchTags: string[];
+}
+
+export interface SiteConfig {
+  headerLogoUrl: string;
+  footerLogoUrl: string;
+  mainSocials: SocialLink[];
+  hosts: Record<string, HostProfile>;
+  stories: StoryPost[];
+}
+
+const DEFAULT_CONFIG: SiteConfig = {
+  headerLogoUrl: "/logo-placeholder.png",
+  footerLogoUrl: "/logo-placeholder.png",
+  mainSocials: [
+    { platform: "YouTube", url: "https://www.youtube.com/@SaadeAalaRadio" },
+    { platform: "Spotify", url: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H" },
+    { platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" },
+    { platform: "Facebook", url: "https://www.facebook.com/SaadeAalaRadio" },
+    { platform: "LinkedIn", url: "https://www.linkedin.com/showcase/saade-aala-radio" },
+    { platform: "Snapchat", url: "https://www.snapchat.com/add/saadeaalaradio" },
+  ],
+  hosts: {
+    harshdeep: {
+      id: "harshdeep",
+      name: "Harshdeep Singh",
+      role: "Lead Anchor & Chaos Director",
+      photoUrl: "/hosts/harshdeep.png",
+      journey: "From running wild production sets to co-founding Saade Aala Radio, Harshdeep brings unfiltered energy and chaotic stories.",
+      quote: "Tension nahi leni, story poori sun ke jaani aa!",
+      socials: [{ platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" }],
+    },
+    sarabjeet: {
+      id: "sarabjeet",
+      name: "Sarabjeet Singh",
+      role: "Co-Host & Comeback King",
+      photoUrl: "/hosts/sarabjeet.png",
+      journey: "Sarabjeet is the anchor of reality—until he snaps with one-liners that shatter the room.",
+      quote: "Ehne gall shuru kiti si, khatam main karunga!",
+      socials: [{ platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" }],
+    },
+    sandeep: {
+      id: "sandeep",
+      name: "Sandeep Singh",
+      role: "Co-Host & Cunning Strategist",
+      photoUrl: "/hosts/sandeep.png",
+      journey: "The quiet genius behind the craziest takes. Sandeep sits back, observes the chaos, and drops punchlines.",
+      quote: "Dimaag thoda ghumaya karo, mazaa fir hi aaunda.",
+      socials: [{ platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" }],
+    },
+  },
+  stories: [],
+};
 
 export default function AdminCMS() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState<"logos" | "socials" | "hosts" | "editor">("logos");
   
-  const [config, setConfig] = useState(initialSiteConfig);
+  const [config, setConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
   const [saveMessage, setSaveMessage] = useState("");
 
   // Editor State
@@ -21,7 +101,27 @@ export default function AdminCMS() {
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [searchTags, setSearchTags] = useState("");
-  // Simple Auth
+
+  // Load from LocalStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("saade_aala_cms_config");
+    if (saved) {
+      try {
+        setConfig(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved config", e);
+      }
+    }
+  }, []);
+
+  // Save Config function
+  const saveConfigToStorage = (updatedConfig: SiteConfig, msg: string) => {
+    setConfig(updatedConfig);
+    localStorage.setItem("saade_aala_cms_config", JSON.stringify(updatedConfig));
+    setSaveMessage(msg);
+    setTimeout(() => setSaveMessage(""), 3000);
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === "saadeaala123") {
@@ -31,12 +131,7 @@ export default function AdminCMS() {
     }
   };
 
-  const triggerSave = (msg: string) => {
-    setSaveMessage(msg);
-    setTimeout(() => setSaveMessage(""), 3000);
-  };
-
-  // Image Helper
+  // Image Upload Handler
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     callback: (url: string) => void
@@ -79,17 +174,16 @@ export default function AdminCMS() {
   };
 
   const insertInlineImage = () => {
-    const url = prompt("Enter Image URL or upload via URL:", "https://");
+    const url = prompt("Enter Image URL:", "https://");
     if (url) formatText("insertImage", url);
   };
 
-  // Publish Story
   const handlePublishStory = (e: React.FormEvent) => {
     e.preventDefault();
     const contentHtml = editorRef.current?.innerHTML || "";
 
     if (!storyTitle || !contentHtml) {
-      alert("Please provide at least a title and content for the story.");
+      alert("Please provide a title and content for the story.");
       return;
     }
 
@@ -107,10 +201,9 @@ export default function AdminCMS() {
       searchTags: searchTags.split(",").map((t) => t.trim()).filter(Boolean),
     };
 
-    setConfig({ ...config, stories: [newPost, ...config.stories] });
-    triggerSave("✨ Story & Blog published with SEO Tags!");
+    const updatedConfig = { ...config, stories: [newPost, ...config.stories] };
+    saveConfigToStorage(updatedConfig, "✨ Story published with SEO Tags!");
 
-    // Reset Form
     setStoryTitle("");
     setStorySummary("");
     setThumbnailUrl("");
@@ -162,7 +255,7 @@ export default function AdminCMS() {
           </div>
         )}
 
-        {/* Navigation Tabs */}
+        {/* CMS Tabs */}
         <div className="grid grid-cols-4 gap-1 bg-[#141417] p-1 rounded-xl border border-[#27272A]">
           {(["logos", "socials", "hosts", "editor"] as const).map((tab) => (
             <button
@@ -214,7 +307,7 @@ export default function AdminCMS() {
               </div>
             </div>
 
-            <button onClick={() => triggerSave("Header & Footer Logos Updated!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
+            <button onClick={() => saveConfigToStorage(config, "Header & Footer Logos Saved!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
               SAVE LOGOS
             </button>
           </section>
@@ -250,6 +343,7 @@ export default function AdminCMS() {
                   placeholder="URL"
                 />
                 <button
+                  type="button"
                   onClick={() => {
                     const updated = config.mainSocials.filter((_, i) => i !== idx);
                     setConfig({ ...config, mainSocials: updated });
@@ -262,19 +356,20 @@ export default function AdminCMS() {
             ))}
 
             <button
+              type="button"
               onClick={() => setConfig({ ...config, mainSocials: [...config.mainSocials, { platform: "New Platform", url: "https://" }] })}
               className="py-2 bg-white/5 border border-dashed border-[#27272A] text-xs font-bold text-[#FFC800] rounded-xl"
             >
               + ADD NEW SOCIAL LINK
             </button>
 
-            <button onClick={() => triggerSave("Social links updated!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl mt-2">
+            <button onClick={() => saveConfigToStorage(config, "Social Links Saved!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl mt-2">
               SAVE SOCIAL LINKS
             </button>
           </section>
         )}
 
-        {/* TAB 3: EDIT HOST PROFILES */}
+        {/* TAB 3: HOST PROFILES */}
         {activeTab === "hosts" && (
           <section className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-6">
             <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles & Custom Socials</h2>
@@ -337,11 +432,51 @@ export default function AdminCMS() {
                     className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white"
                     placeholder="Signature Quote"
                   />
+
+                  {/* Host Custom Social Links */}
+                  <div className="flex flex-col gap-2 pt-2 border-t border-[#27272A]">
+                    <span className="text-[10px] font-bold text-[#A1A1AA]">Host Links:</span>
+                    {host.socials.map((s, sIdx) => (
+                      <div key={sIdx} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={s.platform}
+                          onChange={(e) => {
+                            const updated = { ...config.hosts };
+                            updated[hostKey].socials[sIdx].platform = e.target.value;
+                            setConfig({ ...config, hosts: updated });
+                          }}
+                          className="w-1/3 bg-[#141417] border border-[#27272A] rounded-lg px-2 py-1 text-[11px] text-white"
+                        />
+                        <input
+                          type="text"
+                          value={s.url}
+                          onChange={(e) => {
+                            const updated = { ...config.hosts };
+                            updated[hostKey].socials[sIdx].url = e.target.value;
+                            setConfig({ ...config, hosts: updated });
+                          }}
+                          className="flex-1 bg-[#141417] border border-[#27272A] rounded-lg px-2 py-1 text-[11px] text-white"
+                        />
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = { ...config.hosts };
+                        updated[hostKey].socials.push({ platform: "Instagram", url: "https://" });
+                        setConfig({ ...config, hosts: updated });
+                      }}
+                      className="text-[10px] text-[#FFC800] font-bold self-start"
+                    >
+                      + Add Host Link
+                    </button>
+                  </div>
                 </div>
               );
             })}
 
-            <button onClick={() => triggerSave("Host profiles saved!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
+            <button onClick={() => saveConfigToStorage(config, "Host Profiles Saved!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
               SAVE HOST PROFILES
             </button>
           </section>
