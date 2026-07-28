@@ -52,7 +52,7 @@ export const initialSiteConfig: SiteConfig = {
       name: "Harshdeep Singh",
       role: "Lead Anchor & Chaos Director",
       photoUrl: "/hosts/harshdeep.png",
-      journey: "From running wild production sets to co-founding Saade Aala Radio, Harshdeep brings the unfiltered energy and chaotic stories that keep every episode completely unpredictable.",
+      journey: "From running wild production sets to co-founding Saade Aala Radio, Harshdeep brings unfiltered energy and chaotic stories that keep every episode completely unpredictable.",
       quote: "Tension nahi leni, story poori sun ke jaani aa!",
       socials: [{ platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" }],
     },
