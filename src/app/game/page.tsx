@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 
-// Retro Web Audio Synthesizer Engine
+// Web Audio API Synthesizer (Same as previous build)
 const playSynthSound = (type: "punch" | "kick" | "block" | "jump" | "ko" | "special" | "lightning" | "fire" | "fight") => {
   if (typeof window === "undefined") return;
   try {
@@ -94,7 +94,7 @@ interface VisualParticle {
 interface Fighter {
   id: string;
   name: string;
-  hairColor: string; // Turban color removed
+  hairColor: string; // Used for hair color
   shirtColor: string;
   pantsColor: string;
   heightOffset: number;
@@ -284,7 +284,7 @@ export default function ArcadeGame() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    if (! ctx) return;
+    if (!ctx) return;
 
     let animationId: number;
 

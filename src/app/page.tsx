@@ -167,7 +167,7 @@ export default function Home() {
                   Saade Aala MMA Arcade
                 </div>
                 <div className="text-[10px] text-[#A1A1AA]">
-                  The benchmark mini-game: Tap to fight!
+                  The benchmark mini-game: Best of 3 8-bit battle!
                 </div>
               </div>
             </div>
