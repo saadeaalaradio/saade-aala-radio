@@ -361,6 +361,49 @@ export default function TeamPage() {
           </div>
         </section>
 
+        {/* --- FOOTER SECTION --- */}
+        <footer className="mt-4 pt-6 border-t border-[#27272A] flex flex-col items-center gap-5 text-center">
+          
+          {/* 500px x 500px Logo Placeholder Box */}
+          <div className="w-24 h-24 aspect-square rounded-2xl bg-[#141417] border-2 border-dashed border-[#27272A] flex flex-col items-center justify-center gap-1 group hover:border-[#FFC800] transition-colors">
+            <span className="text-xs font-mono text-[#FFC800] font-bold">500 x 500</span>
+            <span className="text-[9px] text-[#A1A1AA]">LOGO HERE</span>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex items-center justify-center gap-5 text-xs font-semibold text-[#A1A1AA]">
+            <Link href="/" className="hover:text-[#FFC800] transition-colors">
+              Home
+            </Link>
+            <Link href="/team" className="hover:text-[#FFC800] transition-colors">
+              Team
+            </Link>
+            <Link href="/game" className="hover:text-[#FFC800] transition-colors">
+              Game
+            </Link>
+            <Link href="/about" className="hover:text-[#FFC800] transition-colors">
+              About us
+            </Link>
+          </nav>
+
+          {/* Contact & Agency Credits */}
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-[#A1A1AA]">
+              Contact us:{" "}
+              <a
+                href="mailto:saadeaalaradio@gmail.com"
+                className="text-white hover:text-[#FFC800] transition-colors underline font-medium"
+              >
+                saadeaalaradio@gmail.com
+              </a>
+            </p>
+            <p className="text-[10px] text-[#52525B] tracking-wide pt-1">
+              Created by <span className="text-[#A1A1AA] font-bold">Creative Benchers</span>
+            </p>
+          </div>
+
+        </footer>
+
       </main>
     </div>
   );
