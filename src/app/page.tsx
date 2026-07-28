@@ -356,6 +356,21 @@ export default function Home() {
               About us
             </Link>
           </nav>
+          <nav className="flex items-center justify-center gap-4 text-xs font-semibold text-[#A1A1AA]">
+  <Link href="/" className="hover:text-[#FFC800] transition-colors">
+    Home
+  </Link>
+  <Link href="/team" className="hover:text-[#FFC800] transition-colors">
+    Team
+  </Link>
+  <Link href="/game" className="hover:text-[#FFC800] transition-colors">
+    Game
+  </Link>
+  <Link href="/stories" className="hover:text-[#FFC800] transition-colors">
+    Stories
+  </Link>
+</nav>
+          
 
           {/* Contact & Agency Credits */}
           <div className="flex flex-col gap-1">
