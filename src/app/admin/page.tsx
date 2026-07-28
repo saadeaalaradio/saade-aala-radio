@@ -1,75 +1,124 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { initialSiteConfig, HostProfile, SocialLink, StoryPost } from "@/lib/siteData";
 
 export default function AdminCMS() {
-  // --- AUTHENTICATION STATE ---
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<"logos" | "socials" | "hosts" | "editor">("logos");
+  
+  const [config, setConfig] = useState(initialSiteConfig);
+  const [saveMessage, setSaveMessage] = useState("");
 
-  // --- CMS FORM STATES ---
-  const [activeTab, setActiveTab] = useState<"logos" | "socials" | "hosts" | "blogs">("logos");
+  // Editor State
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [storyTitle, setStoryTitle] = useState("");
+  const [storyAuthor, setStoryAuthor] = useState("Harshdeep Singh");
+  const [storySummary, setStorySummary] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [searchTags, setSearchTags] = useState("");
 
-  // 1. Logos & Branding
-  const [headerLogoUrl, setHeaderLogoUrl] = useState("/logo-placeholder.png");
-  const [footerLogoUrl, setFooterLogoUrl] = useState("/logo-placeholder.png");
-
-  // 2. Social Media Credentials
-  const [socials, setSocials] = useState({
-    youtube: "https://www.youtube.com/@SaadeAalaRadio",
-    spotify: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H",
-    instagram: "https://www.instagram.com/saadeaalaradio",
-    facebook: "https://www.facebook.com/SaadeAalaRadio",
-    linkedin: "https://www.linkedin.com/showcase/saade-aala-radio",
-    snapchat: "https://www.snapchat.com/add/saadeaalaradio",
-  });
-
-  // 3. Hosts Photos & Quotes
-  const [hosts, setHosts] = useState({
-    harshdeep: {
-      name: "Harshdeep Singh",
-      role: "Lead Anchor",
-      quote: "Tension nahi leni, story poori sun ke jaani aa!",
-      photoUrl: "/hosts/harshdeep.png",
-    },
-    sarabjeet: {
-      name: "Sarabjeet Singh",
-      role: "Co-Host & Comeback King",
-      quote: "Ehne gall shuru kiti si, khatam main karunga!",
-      photoUrl: "/hosts/sarabjeet.png",
-    },
-    sandeep: {
-      name: "Sandeep Singh",
-      role: "Co-Host & Strategist",
-      quote: "Dimaag thoda ghumaya karo, mazaa fir hi aaunda.",
-      photoUrl: "/hosts/sandeep.png",
-    },
-  });
-
-  // 4. Blog / Short Story Writer
-  const [newBlog, setNewBlog] = useState({
-    title: "",
-    author: "Harshdeep Singh",
-    summary: "",
-    content: "",
-  });
-
-  const [saveStatus, setSaveStatus] = useState<string | null>(null);
-
-  // Simple Auth Check
+  // Simple Auth
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === "saadeaala123") {
       setIsAuthenticated(true);
     } else {
-      alert("Incorrect password! Try again.");
+      alert("Incorrect password!");
     }
   };
 
-  const handleSaveSettings = () => {
-    setSaveStatus("⚡ Changes saved successfully!");
-    setTimeout(() => setSaveStatus(null), 3000);
+  const triggerSave = (msg: string) => {
+    setSaveMessage(msg);
+    setTimeout(() => setSaveMessage(""), 3000);
+  };
+
+  // Image Helper
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    callback: (url: string) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        callback(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Rich Text Commands
+  const formatText = (command: string, value: string | undefined = undefined) => {
+    document.execCommand(command, false, value);
+  };
+
+  const insertTable = () => {
+    const rows = prompt("Number of rows:", "2");
+    const cols = prompt("Number of columns:", "2");
+    if (!rows || !cols) return;
+
+    let tableHtml = `<table style="width:100%; border-collapse:collapse; margin:10px 0; border:1px solid #27272A;">`;
+    for (let i = 0; i < parseInt(rows); i++) {
+      tableHtml += `<tr>`;
+      for (let j = 0; j < parseInt(cols); j++) {
+        tableHtml += `<td style="border:1px solid #27272A; padding:8px; text-align:left;">Cell</td>`;
+      }
+      tableHtml += `</tr>`;
+    }
+    tableHtml += `</table><br/>`;
+    formatText("insertHTML", tableHtml);
+  };
+
+  const insertLink = () => {
+    const url = prompt("Enter Link URL:", "https://");
+    if (url) formatText("createLink", url);
+  };
+
+  const insertInlineImage = () => {
+    const url = prompt("Enter Image URL or upload via URL:", "https://");
+    if (url) formatText("insertImage", url);
+  };
+
+  // Publish Story
+  const handlePublishStory = (e: React.FormEvent) => {
+    e.preventDefault();
+    const contentHtml = editorRef.current?.innerHTML || "";
+
+    if (!storyTitle || !contentHtml) {
+      alert("Please provide at least a title and content for the story.");
+      return;
+    }
+
+    const newPost: StoryPost = {
+      id: `story-${Date.now()}`,
+      title: storyTitle,
+      author: storyAuthor,
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+      readTime: `${Math.max(1, Math.ceil(contentHtml.length / 500))} min read`,
+      thumbnailUrl: thumbnailUrl || "/logo-placeholder.png",
+      summary: storySummary || storyTitle,
+      contentHtml,
+      seoTitle: seoTitle || storyTitle,
+      seoDescription: seoDescription || storySummary,
+      searchTags: searchTags.split(",").map((t) => t.trim()).filter(Boolean),
+    };
+
+    setConfig({ ...config, stories: [newPost, ...config.stories] });
+    triggerSave("✨ Story & Blog published with SEO Tags!");
+
+    // Reset Form
+    setStoryTitle("");
+    setStorySummary("");
+    setThumbnailUrl("");
+    setSeoTitle("");
+    setSeoDescription("");
+    setSearchTags("");
+    if (editorRef.current) editorRef.current.innerHTML = "";
   };
 
   if (!isAuthenticated) {
@@ -77,10 +126,10 @@ export default function AdminCMS() {
       <div className="flex justify-center items-center min-h-screen px-4 bg-[#09090B] text-white font-sans">
         <form onSubmit={handleLogin} className="w-full max-w-[360px] bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4 text-center shadow-2xl">
           <div className="text-2xl font-black text-[#FFC800]">SAADE AALA CMS</div>
-          <p className="text-xs text-[#A1A1AA]">Enter admin passcode to access management controls.</p>
+          <p className="text-xs text-[#A1A1AA]">Enter admin passcode to manage website content.</p>
           <input
             type="password"
-            placeholder="Enter Admin Password"
+            placeholder="Enter Admin Passcode"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-[#09090B] border border-[#27272A] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFC800]"
@@ -94,34 +143,33 @@ export default function AdminCMS() {
   }
 
   return (
-    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B] text-[#FAFAFA] font-sans selection:bg-[#FFC800] selection:text-black">
-      <main className="w-full max-w-[440px] flex flex-col gap-6">
+    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B] text-[#FAFAFA] font-sans">
+      <main className="w-full max-w-[480px] flex flex-col gap-6">
         
-        {/* --- HEADER --- */}
+        {/* Header */}
         <header className="flex items-center justify-between py-2 border-b border-[#27272A]">
           <div>
-            <span className="text-base font-black text-[#FFC800]">CMS ADMIN</span>
-            <span className="text-xs text-[#A1A1AA] block">Saade Aala Radio</span>
+            <span className="text-base font-black text-[#FFC800]">SAADE AALA CMS</span>
+            <span className="text-[10px] text-[#A1A1AA] block">Master Control Panel</span>
           </div>
           <Link href="/" className="text-[10px] font-semibold text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5 hover:border-[#FFC800]">
-            ← VIEW WEBSITE
+            ← VIEW LIVE SITE
           </Link>
         </header>
 
-        {/* Status Toast */}
-        {saveStatus && (
-          <div className="bg-[#FFC800]/20 border border-[#FFC800] text-[#FFC800] text-xs font-bold p-3 rounded-xl text-center animate-pulse">
-            {saveStatus}
+        {saveMessage && (
+          <div className="bg-[#FFC800]/20 border border-[#FFC800] text-[#FFC800] text-xs font-bold p-3 rounded-xl text-center">
+            {saveMessage}
           </div>
         )}
 
-        {/* --- CMS TABS --- */}
+        {/* Navigation Tabs */}
         <div className="grid grid-cols-4 gap-1 bg-[#141417] p-1 rounded-xl border border-[#27272A]">
-          {(["logos", "socials", "hosts", "blogs"] as const).map((tab) => (
+          {(["logos", "socials", "hosts", "editor"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`py-2 text-[10px] font-bold uppercase rounded-lg transition-all ${
+              className={`py-2 text-[10px] font-extrabold uppercase rounded-lg transition-all ${
                 activeTab === tab ? "bg-[#FFC800] text-black shadow-md" : "text-[#A1A1AA] hover:text-white"
               }`}
             >
@@ -130,132 +178,270 @@ export default function AdminCMS() {
           ))}
         </div>
 
-        {/* --- TAB 1: LOGOS & BRANDING --- */}
+        {/* TAB 1: LOGO UPLOADS */}
         {activeTab === "logos" && (
-          <section className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-4">
-            <h2 className="text-xs font-black text-[#FFC800] tracking-wider uppercase">Header & Footer Logos (500x500)</h2>
+          <section className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-5">
+            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Header & Footer Logo Uploads</h2>
             
+            {/* Header Logo */}
             <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-bold text-white">Header Logo Image URL / Path:</label>
-              <input
-                type="text"
-                value={headerLogoUrl}
-                onChange={(e) => setHeaderLogoUrl(e.target.value)}
-                className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FFC800]"
-              />
+              <label className="text-xs font-bold text-white">Header Logo Image</label>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-xl bg-black border border-[#27272A] flex items-center justify-center overflow-hidden">
+                  <img src={config.headerLogoUrl} alt="Header Preview" className="w-full h-full object-contain" />
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, (url) => setConfig({ ...config, headerLogoUrl: url }))}
+                  className="text-xs text-[#A1A1AA] file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-[#FFC800] file:text-black file:font-bold"
+                />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-bold text-white">Footer 500x500 Logo URL / Path:</label>
-              <input
-                type="text"
-                value={footerLogoUrl}
-                onChange={(e) => setFooterLogoUrl(e.target.value)}
-                className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FFC800]"
-              />
+            {/* Footer Logo */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-[#27272A]">
+              <label className="text-xs font-bold text-white">Footer 500x500 Logo Image</label>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-xl bg-black border border-[#27272A] flex items-center justify-center overflow-hidden">
+                  <img src={config.footerLogoUrl} alt="Footer Preview" className="w-full h-full object-contain" />
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, (url) => setConfig({ ...config, footerLogoUrl: url }))}
+                  className="text-xs text-[#A1A1AA] file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-[#FFC800] file:text-black file:font-bold"
+                />
+              </div>
             </div>
 
-            <button onClick={handleSaveSettings} className="w-full py-2.5 bg-[#FFC800] text-black font-black text-xs rounded-xl active:scale-95">
-              SAVE LOGO SETTINGS
+            <button onClick={() => triggerSave("Header & Footer Logos Updated!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
+              SAVE LOGOS
             </button>
           </section>
         )}
 
-        {/* --- TAB 2: SOCIAL MEDIA CREDENTIALS --- */}
+        {/* TAB 2: MAIN SOCIAL MEDIA LINKS */}
         {activeTab === "socials" && (
-          <section className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-3">
-            <h2 className="text-xs font-black text-[#FFC800] tracking-wider uppercase">Social Media Handle URLs</h2>
-            
-            {Object.keys(socials).map((platform) => (
-              <div key={platform} className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-[#A1A1AA] uppercase">{platform}:</label>
-                <input
-                  type="text"
-                  value={socials[platform as keyof typeof socials]}
-                  onChange={(e) => setSocials({ ...socials, [platform]: e.target.value })}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FFC800]"
-                />
-              </div>
-            ))}
-
-            <button onClick={handleSaveSettings} className="w-full py-2.5 bg-[#FFC800] text-black font-black text-xs rounded-xl active:scale-95 mt-2">
-              UPDATE SOCIAL LINKS
-            </button>
-          </section>
-        )}
-
-        {/* --- TAB 3: HOSTS MANAGEMENT --- */}
-        {activeTab === "hosts" && (
           <section className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-4">
-            <h2 className="text-xs font-black text-[#FFC800] tracking-wider uppercase">Host Profiles & PNG Images</h2>
-            
-            {(["harshdeep", "sarabjeet", "sandeep"] as const).map((key) => (
-              <div key={key} className="bg-[#09090B] p-3 rounded-xl border border-[#27272A] flex flex-col gap-2">
-                <span className="text-xs font-bold text-white capitalize">{hosts[key].name}</span>
+            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Saade Aala Radio Links</h2>
+
+            {config.mainSocials.map((link, idx) => (
+              <div key={idx} className="flex gap-2 items-center">
                 <input
                   type="text"
-                  placeholder="PNG Photo URL (e.g. /hosts/harshdeep.png)"
-                  value={hosts[key].photoUrl}
-                  onChange={(e) => setHosts({ ...hosts, [key]: { ...hosts[key], photoUrl: e.target.value } })}
-                  className="bg-[#141417] border border-[#27272A] rounded-lg px-2.5 py-1.5 text-[11px] text-white"
+                  value={link.platform}
+                  onChange={(e) => {
+                    const updated = [...config.mainSocials];
+                    updated[idx].platform = e.target.value;
+                    setConfig({ ...config, mainSocials: updated });
+                  }}
+                  className="w-1/3 bg-[#09090B] border border-[#27272A] rounded-xl px-2.5 py-2 text-xs text-white"
+                  placeholder="Platform"
                 />
                 <input
                   type="text"
-                  placeholder="Signature Quote"
-                  value={hosts[key].quote}
-                  onChange={(e) => setHosts({ ...hosts, [key]: { ...hosts[key], quote: e.target.value } })}
-                  className="bg-[#141417] border border-[#27272A] rounded-lg px-2.5 py-1.5 text-[11px] text-white"
+                  value={link.url}
+                  onChange={(e) => {
+                    const updated = [...config.mainSocials];
+                    updated[idx].url = e.target.value;
+                    setConfig({ ...config, mainSocials: updated });
+                  }}
+                  className="flex-1 bg-[#09090B] border border-[#27272A] rounded-xl px-2.5 py-2 text-xs text-white"
+                  placeholder="URL"
                 />
+                <button
+                  onClick={() => {
+                    const updated = config.mainSocials.filter((_, i) => i !== idx);
+                    setConfig({ ...config, mainSocials: updated });
+                  }}
+                  className="text-xs text-red-500 font-bold px-2"
+                >
+                  ✕
+                </button>
               </div>
             ))}
 
-            <button onClick={handleSaveSettings} className="w-full py-2.5 bg-[#FFC800] text-black font-black text-xs rounded-xl active:scale-95">
-              UPDATE HOST PROFILES
+            <button
+              onClick={() => setConfig({ ...config, mainSocials: [...config.mainSocials, { platform: "New Platform", url: "https://" }] })}
+              className="py-2 bg-white/5 border border-dashed border-[#27272A] text-xs font-bold text-[#FFC800] rounded-xl"
+            >
+              + ADD NEW SOCIAL LINK
+            </button>
+
+            <button onClick={() => triggerSave("Social links updated!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl mt-2">
+              SAVE SOCIAL LINKS
             </button>
           </section>
         )}
 
-        {/* --- TAB 4: BLOG & STORY PUBLISHER --- */}
-        {activeTab === "blogs" && (
-          <section className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-3">
-            <h2 className="text-xs font-black text-[#FFC800] tracking-wider uppercase">Publish New Story / Blog</h2>
-            
+        {/* TAB 3: EDIT HOST PROFILES */}
+        {activeTab === "hosts" && (
+          <section className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-6">
+            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles & Custom Socials</h2>
+
+            {Object.keys(config.hosts).map((hostKey) => {
+              const host = config.hosts[hostKey];
+              return (
+                <div key={hostKey} className="bg-[#09090B] p-4 rounded-2xl border border-[#27272A] flex flex-col gap-3">
+                  <span className="text-xs font-extrabold text-[#FFC800] uppercase">{host.name}</span>
+
+                  {/* Host Photo Upload */}
+                  <div className="flex items-center gap-3">
+                    <img src={host.photoUrl} alt={host.name} className="w-12 h-12 rounded-xl object-cover bg-black border border-[#27272A]" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        handleImageUpload(e, (url) => {
+                          const updated = { ...config.hosts };
+                          updated[hostKey].photoUrl = url;
+                          setConfig({ ...config, hosts: updated });
+                        })
+                      }
+                      className="text-[10px] text-[#A1A1AA]"
+                    />
+                  </div>
+
+                  <input
+                    type="text"
+                    value={host.role}
+                    onChange={(e) => {
+                      const updated = { ...config.hosts };
+                      updated[hostKey].role = e.target.value;
+                      setConfig({ ...config, hosts: updated });
+                    }}
+                    className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white"
+                    placeholder="Role"
+                  />
+
+                  <textarea
+                    rows={2}
+                    value={host.journey}
+                    onChange={(e) => {
+                      const updated = { ...config.hosts };
+                      updated[hostKey].journey = e.target.value;
+                      setConfig({ ...config, hosts: updated });
+                    }}
+                    className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white resize-none"
+                    placeholder="Short Journey Paragraph"
+                  />
+
+                  <input
+                    type="text"
+                    value={host.quote}
+                    onChange={(e) => {
+                      const updated = { ...config.hosts };
+                      updated[hostKey].quote = e.target.value;
+                      setConfig({ ...config, hosts: updated });
+                    }}
+                    className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white"
+                    placeholder="Signature Quote"
+                  />
+                </div>
+              );
+            })}
+
+            <button onClick={() => triggerSave("Host profiles saved!")} className="w-full py-2.5 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
+              SAVE HOST PROFILES
+            </button>
+          </section>
+        )}
+
+        {/* TAB 4: ADVANCED STORY EDITOR WITH SEO TAGS */}
+        {activeTab === "editor" && (
+          <form onSubmit={handlePublishStory} className="bg-[#141417] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-4">
+            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Advanced Story Editor</h2>
+
             <input
               type="text"
-              placeholder="Blog Title"
-              value={newBlog.title}
-              onChange={(e) => setNewBlog({ ...newBlog, title: e.target.value })}
-              className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FFC800]"
+              required
+              placeholder="Story Title"
+              value={storyTitle}
+              onChange={(e) => setStoryTitle(e.target.value)}
+              className="bg-[#09090B] border border-[#27272A] rounded-xl px-3.5 py-2 text-xs text-white focus:border-[#FFC800] outline-none"
             />
 
-            <select
-              value={newBlog.author}
-              onChange={(e) => setNewBlog({ ...newBlog, author: e.target.value })}
-              className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FFC800]"
-            >
-              <option value="Harshdeep Singh">Harshdeep Singh</option>
-              <option value="Sarabjeet Singh">Sarabjeet Singh</option>
-              <option value="Sandeep Singh">Sandeep Singh</option>
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={storyAuthor}
+                onChange={(e) => setStoryAuthor(e.target.value)}
+                className="w-1/2 bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
+              >
+                <option value="Harshdeep Singh">Harshdeep Singh</option>
+                <option value="Sarabjeet Singh">Sarabjeet Singh</option>
+                <option value="Sandeep Singh">Sandeep Singh</option>
+              </select>
 
-            <textarea
-              rows={4}
-              placeholder="Story Content..."
-              value={newBlog.content}
-              onChange={(e) => setNewBlog({ ...newBlog, content: e.target.value })}
-              className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FFC800] resize-none"
+              {/* Story Thumbnail Upload */}
+              <div className="w-1/2 flex items-center gap-2 bg-[#09090B] border border-[#27272A] px-2 py-1 rounded-xl">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, (url) => setThumbnailUrl(url))}
+                  className="text-[9px] text-[#A1A1AA] w-full"
+                />
+              </div>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Short Summary / Teaser"
+              value={storySummary}
+              onChange={(e) => setStorySummary(e.target.value)}
+              className="bg-[#09090B] border border-[#27272A] rounded-xl px-3.5 py-2 text-xs text-white outline-none"
             />
 
-            <button onClick={handleSaveSettings} className="w-full py-2.5 bg-[#FFC800] text-black font-black text-xs rounded-xl active:scale-95">
-              PUBLISH BLOG
+            {/* RICH TEXT TOOLBAR */}
+            <div className="flex flex-wrap gap-1 bg-[#09090B] p-2 rounded-xl border border-[#27272A]">
+              <button type="button" onClick={() => formatText("formatBlock", "<h2>")} className="px-2 py-1 text-[10px] font-bold bg-[#141417] text-white rounded hover:text-[#FFC800]">H2</button>
+              <button type="button" onClick={() => formatText("formatBlock", "<h3>")} className="px-2 py-1 text-[10px] font-bold bg-[#141417] text-white rounded hover:text-[#FFC800]">H3</button>
+              <button type="button" onClick={() => formatText("bold")} className="px-2 py-1 text-[10px] font-bold bg-[#141417] text-white rounded hover:text-[#FFC800]">B</button>
+              <button type="button" onClick={() => formatText("italic")} className="px-2 py-1 text-[10px] font-bold bg-[#141417] text-white rounded hover:text-[#FFC800]">I</button>
+              <button type="button" onClick={insertLink} className="px-2 py-1 text-[10px] font-bold bg-[#141417] text-[#FFC800] rounded">🔗 Link</button>
+              <button type="button" onClick={insertInlineImage} className="px-2 py-1 text-[10px] font-bold bg-[#141417] text-[#FFC800] rounded">🖼️ Photo</button>
+              <button type="button" onClick={insertTable} className="px-2 py-1 text-[10px] font-bold bg-[#141417] text-[#FFC800] rounded">📊 Table</button>
+            </div>
+
+            {/* WYSIWYG Editable Canvas */}
+            <div
+              ref={editorRef}
+              contentEditable
+              className="min-h-[160px] bg-[#09090B] border border-[#27272A] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#FFC800] overflow-y-auto"
+            />
+
+            {/* SEO & SEARCH TAGS BLOCK */}
+            <div className="flex flex-col gap-2 pt-3 border-t border-[#27272A]">
+              <span className="text-[10px] font-extrabold text-[#FFC800] uppercase">🔍 SEO & Search Meta Tags</span>
+              
+              <input
+                type="text"
+                placeholder="Meta SEO Title"
+                value={seoTitle}
+                onChange={(e) => setSeoTitle(e.target.value)}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white"
+              />
+              <input
+                type="text"
+                placeholder="Meta Description"
+                value={seoDescription}
+                onChange={(e) => setSeoDescription(e.target.value)}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white"
+              />
+              <input
+                type="text"
+                placeholder="Search Tags (comma separated, e.g. comedy, sirsa, podcast)"
+                value={searchTags}
+                onChange={(e) => setSearchTags(e.target.value)}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white"
+              />
+            </div>
+
+            <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl active:scale-95 transition-all">
+              🚀 PUBLISH STORY WITH SEO TAGS
             </button>
-          </section>
+          </form>
         )}
-
-        {/* --- FOOTER CREDIT --- */}
-        <footer className="pt-4 text-center text-[10px] text-[#52525B]">
-          Saade Aala Radio CMS • Built by <span className="text-[#A1A1AA] font-bold">Creative Benchers</span>
-        </footer>
 
       </main>
     </div>
