@@ -3,54 +3,44 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
-// Types for future auto-update data
+// --- TYPES FOR LIVE RSS FEED SYNC ---
+// We will activate the fetching logic once we have your Spotify RSS URL.
 interface EpisodeData {
   title: string;
   pubDate: string;
-  link: string;
-  coverArt: string;
+  link: string; // Spotify episode link
+  youtubeId?: string; // We can parse this from the RSS if you include YT links
   embedUrl?: string; // Generated Spotify Embed URL
 }
 
+// Placeholder data (Used until RSS feed is connected)
+const placeholderEpisode = {
+  title: "Episode Placeholder: Need your Spotify RSS Feed URL to Auto-Sync!",
+  pubDate: "May 15, 2024",
+  youtubeId: "ES6ONFKyEgM", // A default placeholder video ID
+  embedUrl: "https://open.spotify.com/embed/episode/7f5e3d2c1b?utm_source=generator",
+};
+
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"spotify" | "youtube">("spotify");
-  const [episode, setEpisode] = useState<EpisodeData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // --- STATE MANAGEMENT ---
+  const [activeTab, setActiveTab] = useState<"youtube" | "spotify">("youtube");
+  const [episode, setEpisode] = useState<EpisodeData>(placeholderEpisode);
+  const [loading, setLoading] = useState(false); // Set to false for static preview
 
-  // Future Logic for Auto-Updating Spotify
-  useEffect(() => {
-    // This is a placeholder. Once you provide the RSS URL, 
-    // we'll build a Next.js API route (/api/podcast) to fetch and parse the feed.
-    async function loadLatestEpisode() {
-      // In production, we fetch from our internal API which parses your RSS
-      // For now, we simulate a loading delay then show placeholder data.
-      setTimeout(() => {
-        setEpisode({
-          title: "We Went to Sirsa... Biggest Mistake Ever",
-          pubDate: "May 15, 2024",
-          link: "https://open.spotify.com/show/4O3...",
-          coverArt: "https://t.scdn.co/images/4O3...", // Real art from RSS
-          embedUrl: "https://open.spotify.com/embed/episode/7f5e3d2c1b?utm_source=generator",
-        });
-        setLoading(false);
-      }, 1500);
-    }
-    loadLatestEpisode();
-  }, []);
-
-  const playSound = (soundName: string) => {
-    // Placeholder function for interactive soundboard triggers
-    alert(`Playing fun sound effect: ${soundName}`);
+  // --- INTERACTIVE SOUNDBOARD ENGINE ---
+  // In Vercel 2.0, we will replace alerts with Web Audio synthesis.
+  const playSound = (soundDescription: string) => {
+    alert(`🔊 Playing Sound Effect: ${soundDescription}`);
   };
 
   return (
-    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B] text-[#FAFAFA]">
+    <div className="flex justify-center min-h-screen px-4 py-6 bg-[#09090B] text-[#FAFAFA] font-sans selection:bg-[#FFC800] selection:text-black">
       <main className="w-full max-w-[440px] flex flex-col gap-6">
         
-        {/* Header Navigation */}
+        {/* --- HEADER --- */}
         <header className="flex items-center justify-between py-2 border-b border-[#27272A]">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight text-[#FFC800]">
+            <span className="text-xl font-black tracking-tighter text-[#FFC800]">
               SAADE AALA
             </span>
             <span className="text-xl font-light tracking-widest text-white">
@@ -61,43 +51,82 @@ export default function Home() {
             href="/team"
             className="text-[10px] font-semibold tracking-wider text-[#A1A1AA] border border-[#27272A] px-3 py-1 rounded-full bg-white/5 hover:border-[#FFC800] hover:text-[#FFC800] transition-colors"
           >
-            MEET THE TEAM →
+            TEAM →
           </Link>
         </header>
 
-        {/* 1. Hero Player Block: DYNAMIC EPISODE AUTO-SYNC */}
+        {/* --- SECTION 1: THE DUAL MEDIA PLAYER (REQUIRED) --- */}
+        {/* This block is coded to eventually auto-sync with Spotify RSS Feed */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#18181C] to-[#141417] border border-[#27272A] p-6 shadow-2xl">
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#7000E0]/20 blur-3xl rounded-full pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#FFC800]/10 blur-3xl rounded-full pointer-events-none" />
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-[#FFC800] bg-[#FFC800]/10 border border-[#FFC800]/20 mb-4">
-            ⚡ LATEST EPISODE
+            ⚡ LATEST EPISODE {loading ? "(Syncing...)" : ""}
           </div>
 
           <h1 className="text-lg font-bold text-white leading-snug mb-1">
-            {loading ? "Fetching latest upload..." : episode?.title}
+            {episode.title}
           </h1>
           <p className="text-xs text-[#A1A1AA] mb-4">
-            {episode?.pubDate ? `Released • ${episode.pubDate}` : "RSS Auto-Synced"}
+            Auto-Synced • {episode.pubDate}
           </p>
 
-          {/* Player Container (Where the Embeds live) */}
-          <div className="w-full aspect-video bg-black rounded-2xl border border-[#27272A] overflow-hidden flex items-center justify-center">
-            {episode?.embedUrl ? (
+          {/* Player Toggle Tabs */}
+          <div className="flex bg-[#09090B] p-1 rounded-xl border border-[#27272A] mb-4">
+            <button
+              onClick={() => setActiveTab("youtube")}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                activeTab === "youtube"
+                  ? "bg-[#FF0000] text-white shadow-md"
+                  : "text-[#A1A1AA] hover:text-white"
+              }`}
+            >
+              YouTube Video
+            </button>
+            <button
+              onClick={() => setActiveTab("spotify")}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                activeTab === "spotify"
+                  ? "bg-[#1DB954] text-black shadow-md"
+                  : "text-[#A1A1AA] hover:text-white"
+              }`}
+            >
+              Spotify Audio
+            </button>
+          </div>
+
+          {/* Aspect-Ratio Player Viewport */}
+          <div className="w-full aspect-video bg-black rounded-2xl border border-[#27272A] overflow-hidden flex items-center justify-center relative">
+            
+            {/* YouTube Embed Player */}
+            <div className={`absolute inset-0 transition-opacity duration-300 ${activeTab === 'youtube' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              {episode.youtubeId ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${episode.youtubeId}?autoplay=0&rel=0&modestbranding=1`}
+                  title="Saade Aala Radio Latest YouTube Video"
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <p className="text-xs text-[#A1A1AA] p-4 text-center">Video Sync Pending RSS...</p>
+              )}
+            </div>
+
+            {/* Spotify Embed Player */}
+            <div className={`absolute inset-0 transition-opacity duration-300 ${activeTab === 'spotify' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
               <iframe
                 src={episode.embedUrl}
                 title="Saade Aala Radio Latest Spotify Episode"
                 className="w-full h-full border-0"
                 allow="encrypted-media"
+                loading="lazy"
               />
-            ) : (
-              <p className="text-xs text-[#A1A1AA] p-4 text-center">
-                🎧 Connecting to your Spotify RSS feed...
-              </p>
-            )}
+            </div>
           </div>
         </section>
 
-        {/* 2. Fun Interactivity soundboard (Comedy vibe) */}
+        {/* --- SECTION 2: FUN SOUNDBOARDS (COMEDY HUB REQUIREMENT) --- */}
         <section className="flex flex-col gap-3">
           <div className="flex justify-between items-center text-xs font-semibold text-[#A1A1AA] tracking-wider">
             <span>FUN SOUNDBOARD</span>
@@ -106,68 +135,39 @@ export default function Home() {
 
           <div className="grid grid-cols-2 gap-2.5">
             {[
-              { name: "Sirsa Story Laugh", sound: "sirsa_laugh" },
-              { name: "Sarabjeet's Comeback", sound: "sarab_comeback" },
-              { name: "Cunning Sandeep", sound: "sandeep_smile" },
-              { name: "Chaotic Rant", sound: "rant_harsh" },
-            ].map((sound) => (
+              "Iconic Sirsa Laugh",
+              "Sarabjeet Comeback",
+              "Sandeep Cunning Smile",
+              "Harsh Rant Alert",
+            ].map((soundName) => (
               <button
-                key={sound.sound}
-                onClick={() => playSound(sound.name)}
-                className="flex justify-between items-center bg-[#141417] border border-[#27272A] hover:border-[#FFC800] p-3.5 rounded-2xl text-xs font-medium text-white transition-all active:scale-95"
+                key={soundName}
+                onClick={() => playSound(soundName)}
+                className="flex justify-between items-center bg-[#141417] border border-[#27272A] hover:border-[#FFC800] p-3.5 rounded-2xl text-xs font-medium text-white transition-all active:scale-95 group"
               >
-                <span>{sound.name}</span>
-                <span className="text-[#FFC800] text-[10px]">▶</span>
+                <span>{soundName}</span>
+                <span className="text-[#FFC800] text-[10px] group-hover:animate-pulse">▶</span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* 3. Your Hosts Spotlight (Connected to /team) */}
-        <section className="flex flex-col gap-3">
-          <div className="text-xs font-semibold text-[#A1A1AA] tracking-wider">
-            YOUR HOSTS
-          </div>
-          <div className="grid grid-cols-3 gap-2.5">
-            {[
-              { name: "Harshdeep", initial: "H", color: "#FFC800" },
-              { name: "Sarabjeet", initial: "S", color: "#7000E0" },
-              { name: "Sandeep", initial: "S", color: "#FF4500" },
-            ].map((host) => (
-              <div
-                key={host.name}
-                className="bg-[#141417] border border-[#27272A] p-4 rounded-2xl flex flex-col items-center gap-1.5 group hover:border-[#FFC800]/40 transition-colors"
-              >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-bold text-white shadow-xl"
-                  style={{ backgroundColor: host.color }}
-                >
-                  {host.initial}
-                </div>
-                <span className="text-xs font-semibold text-white">
-                  {host.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 4. Mini MMA Game Link (That we built!) */}
+        {/* --- SECTION 3: MMA GAME SPOTLIGHT (THE BENCHMARK) --- */}
         <section>
           <Link
             href="/game"
-            className="flex items-center justify-between bg-gradient-to-r from-[#18181C] to-[#141417] border border-[#27272A] p-4 rounded-2xl hover:border-[#FFC800] transition-all group"
+            className="flex items-center justify-between bg-gradient-to-r from-[#18181C] to-[#141417] border-2 border-[#FFC800]/20 p-4 rounded-3xl hover:border-[#FFC800] transition-all group shadow-xl"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#FFC800]/20 flex items-center justify-center text-lg">
                 🥊
               </div>
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-[#FFC800] transition-colors">
-                  Saade Aala MMA Arcade
+                <div className="text-xs font-black text-white group-hover:text-[#FFC800] transition-colors">
+                  SAADE AALA MMA ARCADE
                 </div>
                 <div className="text-[10px] text-[#A1A1AA]">
-                  The benchmark mini-game: Best of 3 8-bit battle!
+                  Best of 3 8-bit battle! Can you win?
                 </div>
               </div>
             </div>
@@ -175,37 +175,39 @@ export default function Home() {
           </Link>
         </section>
 
-        {/* 5. Youtube & Social Links */}
+        {/* --- SECTION 4: SOCIAL MEDIA (ALL REQUIRED LINKS ADDED) --- */}
         <section className="flex flex-col gap-3">
           <div className="text-xs font-semibold text-[#A1A1AA] tracking-wider">
             CONNECT & SUBSCRIBE
           </div>
 
-          <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-3 flex flex-col gap-2">
+          <div className="bg-[#141417] border border-[#27272A] rounded-2xl p-3 grid grid-cols-2 gap-2.5">
             {[
-              { name: "YouTube", handle: "@SaadeAalaRadio", color: "#FF0000" },
-              { name: "Spotify", handle: "Listen Free", color: "#1DB954" },
-              { name: "Instagram", handle: "@Harshdeep243", color: "#E4405F" },
-              { name: "Facebook", handle: "Saade Aala Radio", color: "#1877F2" },
+              { name: "YouTube", handle: "@SaadeAalaRadio", color: "#FF0000", url: "https://www.youtube.com/@SaadeAalaRadio" },
+              { name: "Spotify", handle: "Listen Free", color: "#1DB954", url: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H" },
+              { name: "Instagram", handle: "@saadeaalaradio", color: "#E4405F", url: "https://www.instagram.com/saadeaalaradio" },
+              { name: "Facebook", handle: "Saade Aala Radio", color: "#1877F2", url: "https://www.facebook.com/SaadeAalaRadio" },
+              { name: "LinkedIn", handle: "Comedy Hub", color: "#0077B5", url: "https://www.linkedin.com/showcase/saade-aala-radio" },
+              { name: "Snapchat", handle: "@saadeaalaradio", color: "#FFFC00", url: "https://www.snapchat.com/add/saadeaalaradio", textColor: 'black' },
             ].map((social) => (
-              <div
+              <a
                 key={social.name}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-md"
-                    style={{ backgroundColor: social.color }}
-                  >
-                    {social.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white">{social.name}</div>
-                    <div className="text-[10px] text-[#A1A1AA]">{social.handle}</div>
-                  </div>
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shadow-md"
+                  style={{ backgroundColor: social.color, color: social.textColor || 'white' }}
+                >
+                  {social.name.charAt(0)}
                 </div>
-                <span className="text-[10px] font-medium text-[#FFC800]">Subscribe →</span>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-white truncate">{social.name}</div>
+                  <div className="text-[9px] text-[#A1A1AA] truncate">{social.handle}</div>
+                </div>
+              </a>
             ))}
           </div>
         </section>
