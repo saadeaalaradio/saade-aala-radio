@@ -287,24 +287,21 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- SECTION 5: ANIMATED UPCOMING SHOWS CAROUSEL (1:1 POSTERS) --- */}
+        {/* --- SECTION 5: ANIMATED UPCOMING SHOWS CAROUSEL --- */}
         <section className="flex flex-col gap-3 overflow-hidden">
           <div className="flex justify-between items-center text-xs font-semibold text-[#A1A1AA] tracking-wider">
             <span>UPCOMING SHOWS & TOURS</span>
             <span className="text-[#FFC800] text-[10px]">SWIPE ➔</span>
           </div>
 
-          {/* Smooth Horizontal Scroll Container with Touch Support */}
           <div className="flex gap-3 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scrollbar-none scroll-smooth">
             {UPCOMING_SHOWS.map((show) => (
               <div
                 key={show.id}
                 className="snap-center shrink-0 w-[220px] aspect-square rounded-2xl bg-[#141417] border border-[#27272A] hover:border-[#FFC800]/50 transition-all p-4 flex flex-col justify-between relative overflow-hidden group shadow-lg"
               >
-                {/* Decorative Background Gradient Placeholder for 1:1 Poster */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${show.color} opacity-40 group-hover:opacity-70 transition-opacity`} />
                 
-                {/* 1:1 Poster Badge */}
                 <div className="relative z-10 flex justify-between items-start">
                   <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#FFC800] text-black shadow-md">
                     {show.tag}
@@ -312,7 +309,6 @@ export default function Home() {
                   <span className="text-xs text-[#A1A1AA] font-mono">1:1 POSTER</span>
                 </div>
 
-                {/* Show Details Overlay */}
                 <div className="relative z-10 flex flex-col gap-1">
                   <h3 className="text-sm font-black text-white leading-tight group-hover:text-[#FFC800] transition-colors">
                     {show.title}
@@ -325,7 +321,6 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* Ticket Action Button */}
                 <button
                   onClick={() => alert(`Tickets for ${show.title} coming soon!`)}
                   className="relative z-10 w-full py-1.5 bg-white/10 hover:bg-[#FFC800] hover:text-black border border-white/10 text-white font-bold text-[10px] rounded-xl transition-all active:scale-95 text-center"
@@ -336,6 +331,49 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        {/* --- FOOTER SECTION --- */}
+        <footer className="mt-4 pt-6 border-t border-[#27272A] flex flex-col items-center gap-5 text-center">
+          
+          {/* 500px x 500px Logo Placeholder Box */}
+          <div className="w-24 h-24 aspect-square rounded-2xl bg-[#141417] border-2 border-dashed border-[#27272A] flex flex-col items-center justify-center gap-1 group hover:border-[#FFC800] transition-colors">
+            <span className="text-xs font-mono text-[#FFC800] font-bold">500 x 500</span>
+            <span className="text-[9px] text-[#A1A1AA]">LOGO HERE</span>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex items-center justify-center gap-5 text-xs font-semibold text-[#A1A1AA]">
+            <Link href="/" className="hover:text-[#FFC800] transition-colors">
+              Home
+            </Link>
+            <Link href="/team" className="hover:text-[#FFC800] transition-colors">
+              Team
+            </Link>
+            <Link href="/game" className="hover:text-[#FFC800] transition-colors">
+              Game
+            </Link>
+            <Link href="/about" className="hover:text-[#FFC800] transition-colors">
+              About us
+            </Link>
+          </nav>
+
+          {/* Contact & Agency Credits */}
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-[#A1A1AA]">
+              Contact us:{" "}
+              <a
+                href="mailto:saadeaalaradio@gmail.com"
+                className="text-white hover:text-[#FFC800] transition-colors underline font-medium"
+              >
+                saadeaalaradio@gmail.com
+              </a>
+            </p>
+            <p className="text-[10px] text-[#52525B] tracking-wide pt-1">
+              Created by <span className="text-[#A1A1AA] font-bold">Creative Benchers</span>
+            </p>
+          </div>
+
+        </footer>
 
       </main>
     </div>
