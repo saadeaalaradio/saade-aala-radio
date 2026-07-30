@@ -102,7 +102,7 @@ const DEFAULT_COMMENTS: Comment[] = [
 export default function StoriesPage() {
   const [stories, setStories] = useState<StoryPost[]>(DEFAULT_STORIES);
   const [comments, setComments] = useState<Comment[]>(DEFAULT_COMMENTS);
-  const [selectedAuthor, setSelectedAuthor] = useState<string>("All");
+  const [selectedFilter, setSelectedFilter] = useState<string>("Newest First");
   
   // Reader Modal State
   const [activeStory, setActiveStory] = useState<StoryPost | null>(null);
@@ -144,9 +144,24 @@ export default function StoriesPage() {
     setCommentText("");
   };
 
-  const filteredStories = selectedAuthor === "All"
-    ? stories
-    : stories.filter((s) => s.author.toLowerCase().includes(selectedAuthor.toLowerCase()));
+  // Filtering & Sorting Logic
+  const getFilteredAndSortedStories = () => {
+    let result = [...stories];
+
+    // Filter by Author if Harsh, Sarab, or Sandeep is selected
+    if (selectedFilter === "Harsh") {
+      result = result.filter((s) => s.author.toLowerCase().includes("harshdeep"));
+    } else if (selectedFilter === "Sarab") {
+      result = result.filter((s) => s.author.toLowerCase().includes("sarabjeet"));
+    } else if (selectedFilter === "Sandeep") {
+      result = result.filter((s) => s.author.toLowerCase().includes("sandeep"));
+    }
+
+    // "Newest First" or default reverse chronological sort
+    return result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  };
+
+  const displayedStories = getFilteredAndSortedStories();
 
   return (
     <div className="min-h-screen bg-[#09090B] text-[#FAFAFA] font-sans selection:bg-[#FFC800] selection:text-black flex flex-col justify-between">
@@ -221,19 +236,19 @@ export default function StoriesPage() {
             Behind the scenes, wild road trip tales, roast transcripts, and studio stories written by the hosts.
           </p>
 
-          {/* Author / Category Filters */}
+          {/* EXACT REQUESTED FILTER BAR: Newest First -> All Authors -> Harsh -> Sarab -> Sandeep */}
           <div className="flex gap-2 overflow-x-auto max-w-full py-3 scrollbar-none">
-            {["All", "Harshdeep", "Sarabjeet", "Sandeep"].map((author) => (
+            {["Newest First", "All Authors", "Harsh", "Sarab", "Sandeep"].map((filter) => (
               <button
-                key={author}
-                onClick={() => setSelectedAuthor(author)}
+                key={filter}
+                onClick={() => setSelectedFilter(filter)}
                 className={`px-4 py-1.5 text-xs font-bold rounded-full border transition-all shrink-0 ${
-                  selectedAuthor === author
-                    ? "bg-[#FFC800] text-black border-[#FFC800]"
+                  selectedFilter === filter
+                    ? "bg-[#FFC800] text-black border-[#FFC800] shadow-md"
                     : "bg-[#141417] text-[#A1A1AA] border-[#27272A] hover:border-[#FFC800]"
                 }`}
               >
-                {author === "All" ? "All Authors" : author}
+                {filter === "Newest First" ? "⚡ Newest First" : filter}
               </button>
             ))}
           </div>
@@ -241,7 +256,7 @@ export default function StoriesPage() {
 
         {/* STORY CARDS GRID */}
         <section className="max-w-[1100px] mx-auto px-4 md:px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {filteredStories.map((story) => (
+          {displayedStories.map((story) => (
             <div
               key={story.id}
               onClick={() => setActiveStory(story)}
