@@ -43,23 +43,22 @@ export default function HomePage() {
       
       <div>
         {/* 💻 DESKTOP HEADER */}
-<header className="hidden md:block sticky top-0 z-40 backdrop-blur-md bg-[#09090B]/90 border-b border-[#27272A] px-8 py-4">
-  <div className="max-w-[1100px] mx-auto flex items-center justify-between">
-    <Link href="/" className="flex items-center gap-1.5 no-underline">
-      <span className="text-2xl font-black tracking-tighter text-[#FFC800]">SAADE AALA</span>
-      <span className="text-2xl font-light tracking-widest text-white">RADIO</span>
-    </Link>
+        <header className="hidden md:block sticky top-0 z-40 backdrop-blur-md bg-[#09090B]/90 border-b border-[#27272A] px-8 py-4">
+          <div className="max-w-[1100px] mx-auto flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-1.5 no-underline">
+              <span className="text-2xl font-black tracking-tighter text-[#FFC800]">SAADE AALA</span>
+              <span className="text-2xl font-light tracking-widest text-white">RADIO</span>
+            </Link>
 
-    <nav className="flex items-center gap-8 text-sm font-bold text-[#A1A1AA]">
-      <Link href="/" className="text-[#FFC800]">Home</Link>
-      {/* 👈 PASTE ABOUT US LINK HERE */}
-      <Link href="/about" className="hover:text-[#FFC800] transition-colors">About Us</Link>
-      <Link href="/team" className="hover:text-[#FFC800] transition-colors">Meet The Team</Link>
-      <Link href="/stories" className="hover:text-[#FFC800] transition-colors">Short Stories</Link>
-      <Link href="/game" className="hover:text-[#FFC800] transition-colors text-[#FFC800]">🎮 MMA Arcade</Link>
-    </nav>
-  </div>
-</header>
+            <nav className="flex items-center gap-8 text-sm font-bold text-[#A1A1AA]">
+              <Link href="/" className="text-[#FFC800]">Home</Link>
+              <Link href="/about" className="hover:text-[#FFC800] transition-colors">About Us</Link>
+              <Link href="/team" className="hover:text-[#FFC800] transition-colors">Meet The Team</Link>
+              <Link href="/stories" className="hover:text-[#FFC800] transition-colors">Short Stories</Link>
+              <Link href="/game" className="hover:text-[#FFC800] transition-colors text-[#FFC800]">🎮 MMA Arcade</Link>
+            </nav>
+          </div>
+        </header>
 
         {/* 📱 MOBILE HEADER + HAMBURGER TRIGGER */}
         <header className="md:hidden sticky top-0 z-40 backdrop-blur-md bg-[#09090B]/95 border-b border-[#27272A] px-4 py-3 flex items-center justify-between">
@@ -78,24 +77,13 @@ export default function HomePage() {
         </header>
 
         {/* 📱 MOBILE SIDEBAR DRAWER */}
-<nav className="flex flex-col gap-4 text-sm font-bold text-white">
-  <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[#FFC800]">
-    🏠 Home
-  </Link>
-  {/* 👈 PASTE ABOUT US LINK HERE */}
-  <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
-    📖 About Us
-  </Link>
-  <Link href="/team" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
-    🎙️ Meet The Team
-  </Link>
-  <Link href="/stories" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
-    📖 Short Stories
-  </Link>
-  <Link href="/game" onClick={() => setIsMobileMenuOpen(false)} className="text-[#FFC800]">
-    🎮 MMA Arcade Game
-  </Link>
-</nav>
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end md:hidden">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/80 backdrop-blur-xs"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
 
             {/* Slide-out Drawer */}
             <div className="relative w-[280px] h-full bg-[#141417] border-l border-[#27272A] p-6 flex flex-col justify-between z-10 shadow-2xl animate-in slide-in-from-right duration-200">
@@ -116,6 +104,9 @@ export default function HomePage() {
                 <nav className="flex flex-col gap-4 text-sm font-bold text-white">
                   <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[#FFC800]">
                     🏠 Home
+                  </Link>
+                  <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
+                    📖 About Us
                   </Link>
                   <Link href="/team" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
                     🎙️ Meet The Team
@@ -377,17 +368,16 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-{/* Quick Links in Footer */}
-<div className="flex flex-col gap-2 text-xs font-semibold text-[#A1A1AA]">
-  <span className="text-xs font-black text-white uppercase tracking-wider mb-1">NAVIGATION</span>
-  <Link href="/" className="hover:text-[#FFC800]">Home</Link>
-  {/* 👈 PASTE ABOUT US LINK HERE */}
-  <Link href="/about" className="hover:text-[#FFC800]">About Us</Link>
-  <Link href="/team" className="hover:text-[#FFC800]">Meet The Team</Link>
-  <Link href="/stories" className="hover:text-[#FFC800]">Short Stories</Link>
-  <Link href="/game" className="hover:text-[#FFC800]">MMA Arcade Game</Link>
-</div>
-          
+
+          {/* Quick Links */}
+          <div className="flex flex-col gap-2 text-xs font-semibold text-[#A1A1AA]">
+            <span className="text-xs font-black text-white uppercase tracking-wider mb-1">NAVIGATION</span>
+            <Link href="/" className="hover:text-[#FFC800]">Home</Link>
+            <Link href="/about" className="hover:text-[#FFC800]">About Us</Link>
+            <Link href="/team" className="hover:text-[#FFC800]">Meet The Team</Link>
+            <Link href="/stories" className="hover:text-[#FFC800]">Short Stories</Link>
+            <Link href="/game" className="hover:text-[#FFC800]">MMA Arcade Game</Link>
+          </div>
 
           {/* Contact & Credit */}
           <div className="flex flex-col items-center md:items-end gap-2 text-xs text-[#A1A1AA]">
