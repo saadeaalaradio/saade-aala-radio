@@ -3,10 +3,21 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 
-export interface HomepageSection {
-  id: "webplayer" | "banners" | "hosts_photo" | "social_media" | "mma_game" | "stories";
+// --- INTERFACES ---
+export interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
+}
+
+export interface EpisodeBanner {
+  id: string;
   title: string;
-  enabled: boolean;
+  duration: string;
+  imageUrl: string;
+  altText: string;
+  metaData: string;
+  streamUrl: string;
 }
 
 export interface HostProfile {
@@ -14,8 +25,10 @@ export interface HostProfile {
   name: string;
   role: string;
   photoUrl: string;
+  photoAltText: string;
   journey: string;
   quote: string;
+  socials: SocialLink[];
 }
 
 export interface FanQuestion {
@@ -31,10 +44,13 @@ export interface FanQuestion {
 export interface StoryPost {
   id: string;
   title: string;
+  punchline: string;
   author: string;
   date: string;
   readTime: string;
   thumbnailUrl: string;
+  thumbnailAltText: string;
+  thumbnailMetaData: string;
   summary: string;
   contentHtml: string;
   seoTitle: string;
@@ -49,21 +65,41 @@ export interface Milestone {
   description: string;
   quote?: string;
   imageUrl: string;
+  imageAltText: string;
+  imageMetaData: string;
+}
+
+export interface AchievementBadge {
+  id: string;
+  number: string;
+  label: string;
 }
 
 export interface PageSEO {
   title: string;
   description: string;
+  keywords: string;
 }
 
 export interface MasterSiteConfig {
   headerLogoUrl: string;
   footerLogoUrl: string;
-  homepageSections: HomepageSection[];
+  homeSocials: SocialLink[];
+  episodeBanners: EpisodeBanner[];
+  homepageTeamPhoto: {
+    url: string;
+    altText: string;
+    titleText: string;
+  };
+  teamPageContent: {
+    heroHeadline: string;
+    heroSubheadline: string;
+  };
   hosts: Record<string, HostProfile>;
   questions: FanQuestion[];
   stories: StoryPost[];
   milestones: Milestone[];
+  achievements: AchievementBadge[];
   pageSeo: {
     home: PageSEO;
     team: PageSEO;
@@ -73,41 +109,65 @@ export interface MasterSiteConfig {
   };
 }
 
+// --- INITIAL DEFAULT DATA ---
 const DEFAULT_CONFIG: MasterSiteConfig = {
   headerLogoUrl: "/logo-placeholder.png",
   footerLogoUrl: "/logo-placeholder.png",
-  homepageSections: [
-    { id: "webplayer", title: "1. Webplayer (YouTube + Spotify)", enabled: true },
-    { id: "banners", title: "2. 16:9 Episode Banner Slides", enabled: true },
-    { id: "hosts_photo", title: "3. Hosts Photo & Meet The Team", enabled: true },
-    { id: "social_media", title: "4. Social Media Tab", enabled: true },
-    { id: "mma_game", title: "5. MMA Arcade Game", enabled: true },
-    { id: "stories", title: "6. Short Stories Tab", enabled: true },
+  homeSocials: [
+    { id: "s-1", platform: "YouTube", url: "https://www.youtube.com/@SaadeAalaRadio" },
+    { id: "s-2", platform: "Spotify", url: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H" },
+    { id: "s-3", platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" },
   ],
+  episodeBanners: [
+    {
+      id: "b-1",
+      title: "Episode #1 - Sirsa Special Roast",
+      duration: "45 MINS",
+      imageUrl: "/logo-placeholder.png",
+      altText: "Saade Aala Radio Sirsa Trip Roast Banner",
+      metaData: "Episode 1 Thumbnail Art",
+      streamUrl: "https://www.youtube.com/@SaadeAalaRadio",
+    },
+  ],
+  homepageTeamPhoto: {
+    url: "/hosts-group.png",
+    altText: "Harshdeep, Sarabjeet, and Sandeep sitting in studio",
+    titleText: "The Trio Behind The Mic",
+  },
+  teamPageContent: {
+    heroHeadline: "Meet The Chaos Crew",
+    heroSubheadline: "Unfiltered banter, raw comedy, and crazy stories. Get to know the hosts!",
+  },
   hosts: {
     harshdeep: {
       id: "harshdeep",
       name: "Harshdeep Singh",
       role: "Lead Anchor & Chaos Director",
       photoUrl: "/hosts/harshdeep.png",
+      photoAltText: "Harshdeep Singh Lead Host Cutout",
       journey: "From running wild production sets to co-founding Saade Aala Radio...",
       quote: "Tension nahi leni, story poori sun ke jaani aa!",
+      socials: [{ id: "hs-1", platform: "Instagram", url: "https://instagram.com" }],
     },
     sarabjeet: {
       id: "sarabjeet",
       name: "Sarabjeet Singh",
       role: "Co-Host & Comeback King",
       photoUrl: "/hosts/sarabjeet.png",
-      journey: "Sarabjeet is the anchor of reality until he drops legendary one-liners...",
+      photoAltText: "Sarabjeet Singh Co-Host Cutout",
+      journey: "Sarabjeet drops legendary one-liners that shatter the room into laughter...",
       quote: "Ehne gall shuru kiti si, khatam main karunga!",
+      socials: [{ id: "ss-1", platform: "Instagram", url: "https://instagram.com" }],
     },
     sandeep: {
       id: "sandeep",
       name: "Sandeep Singh",
       role: "Co-Host & Cunning Strategist",
       photoUrl: "/hosts/sandeep.png",
+      photoAltText: "Sandeep Singh Co-Host Cutout",
       journey: "The quiet genius behind the craziest takes...",
       quote: "Dimaag thoda ghumaya karo, mazaa fir hi aaunda.",
+      socials: [{ id: "sn-1", platform: "Instagram", url: "https://instagram.com" }],
     },
   },
   questions: [
@@ -122,21 +182,18 @@ const DEFAULT_CONFIG: MasterSiteConfig = {
     },
   ],
   stories: [],
-  milestones: [
-    {
-      id: "m-1",
-      tag: "EARLY DAYS",
-      title: "The Late-Night Idea",
-      description: "Harshdeep, Sarabjeet, and Sandeep recorded on a single mic...",
-      imageUrl: "/about/milestone1.png",
-    },
+  milestones: [],
+  achievements: [
+    { id: "a-1", number: "100+", label: "Videos Published" },
+    { id: "a-2", number: "1M+", label: "Total Views" },
+    { id: "a-3", number: "3", label: "Upcoming Projects" },
   ],
   pageSeo: {
-    home: { title: "Saade Aala Radio - Unfiltered Punjabi Podcast", description: "Raw comedy, wild stories, and unscripted banter." },
-    team: { title: "Meet The Team - Saade Aala Radio", description: "Meet Harshdeep, Sarabjeet, and Sandeep." },
-    stories: { title: "Short Stories & Blogs - Saade Aala Radio", description: "Unfiltered studio tales and behind the scenes stories." },
-    about: { title: "About Us - Saade Aala Radio", description: "Our evolution from a makeshift room to a pro studio." },
-    game: { title: "8-Bit MMA Arcade Game - Saade Aala Radio", description: "Play our retro arcade fighting game." },
+    home: { title: "Saade Aala Radio - Unfiltered Punjabi Podcast", description: "Raw comedy and banter.", keywords: "punjabi podcast, comedy, saade aala" },
+    team: { title: "Meet The Team - Saade Aala Radio", description: "Meet our hosts.", keywords: "harshdeep, sarabjeet, sandeep" },
+    stories: { title: "Short Stories - Saade Aala Radio", description: "Studio tales.", keywords: "stories, blogs, comedy" },
+    about: { title: "About Us - Saade Aala Radio", description: "Our podcast origin story.", keywords: "about us, timeline" },
+    game: { title: "8-Bit MMA Game - Saade Aala Radio", description: "Arcade fighting game.", keywords: "mma, arcade, game" },
   },
 };
 
@@ -144,7 +201,7 @@ export default function MasterAdminCMS() {
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const [activeTab, setActiveTab] = useState<"layout" | "logos" | "team" | "about" | "stories" | "seo">("layout");
+  const [activeTab, setActiveTab] = useState<"home" | "team" | "stories" | "about" | "seo">("home");
 
   const [config, setConfig] = useState<MasterSiteConfig>(DEFAULT_CONFIG);
   const [saveMessage, setSaveMessage] = useState("");
@@ -153,9 +210,12 @@ export default function MasterAdminCMS() {
   const editorRef = useRef<HTMLDivElement>(null);
   const [editingStoryId, setEditingStoryId] = useState<string | null>(null);
   const [storyTitle, setStoryTitle] = useState("");
+  const [storyPunchline, setStoryPunchline] = useState("");
   const [storyAuthor, setStoryAuthor] = useState("Harshdeep Singh");
   const [storySummary, setStorySummary] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailAlt, setThumbnailAlt] = useState("");
+  const [thumbnailMeta, setThumbnailMeta] = useState("");
   const [storySeoTitle, setStorySeoTitle] = useState("");
   const [storySeoDesc, setStorySeoDesc] = useState("");
   const [storySearchTags, setStorySearchTags] = useState("");
@@ -170,15 +230,17 @@ export default function MasterAdminCMS() {
           setConfig({
             ...DEFAULT_CONFIG,
             ...parsed,
-            homepageSections: parsed.homepageSections || DEFAULT_CONFIG.homepageSections,
+            homeSocials: parsed.homeSocials || DEFAULT_CONFIG.homeSocials,
+            episodeBanners: parsed.episodeBanners || DEFAULT_CONFIG.episodeBanners,
             hosts: parsed.hosts || DEFAULT_CONFIG.hosts,
             questions: parsed.questions || DEFAULT_CONFIG.questions,
             stories: parsed.stories || DEFAULT_CONFIG.stories,
             milestones: parsed.milestones || DEFAULT_CONFIG.milestones,
+            achievements: parsed.achievements || DEFAULT_CONFIG.achievements,
             pageSeo: { ...DEFAULT_CONFIG.pageSeo, ...(parsed.pageSeo || {}) },
           });
         } catch (e) {
-          console.error("Error parsing CMS config", e);
+          console.error("Error loading config", e);
         }
       }
     }
@@ -195,13 +257,11 @@ export default function MasterAdminCMS() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "saadeaala123") {
-      setIsAuthenticated(true);
-    } else {
-      alert("Incorrect passcode!");
-    }
+    if (password === "saadeaala123") setIsAuthenticated(true);
+    else alert("Incorrect passcode!");
   };
 
+  // Rich Text Formatting Tools
   const formatText = (command: string, value: string | undefined = undefined) => {
     if (typeof document !== "undefined") {
       document.execCommand(command, false, value);
@@ -209,10 +269,44 @@ export default function MasterAdminCMS() {
     }
   };
 
+  const insertLink = () => {
+    const url = prompt("Enter URL:");
+    if (url) formatText("createLink", url);
+  };
+
+  const insertImage = () => {
+    const url = prompt("Enter Image URL:");
+    const alt = prompt("Enter Image Alt Text:") || "Story Image";
+    if (url) {
+      const html = `<img src="${url}" alt="${alt}" class="my-3 rounded-xl max-w-full border border-[#27272A]" />`;
+      formatText("insertHTML", html);
+    }
+  };
+
+  const insertTable = () => {
+    const tableHtml = `
+      <table class="w-full my-3 border-collapse border border-[#27272A] text-left text-xs">
+        <thead>
+          <tr class="bg-[#141417] text-[#FFC800]">
+            <th class="border border-[#27272A] p-2">Header 1</th>
+            <th class="border border-[#27272A] p-2">Header 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="border border-[#27272A] p-2">Data 1</td>
+            <td class="border border-[#27272A] p-2">Data 2</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    formatText("insertHTML", tableHtml);
+  };
+
   const handleSaveStory = (e: React.FormEvent) => {
     e.preventDefault();
     const contentHtml = editorRef.current?.innerHTML || "";
-    if (!storyTitle || !contentHtml) return alert("Title and Story Content are required!");
+    if (!storyTitle || !contentHtml) return alert("Story Title and Content required!");
 
     let updatedStories = [...(config.stories || [])];
 
@@ -222,9 +316,12 @@ export default function MasterAdminCMS() {
           ? {
               ...s,
               title: storyTitle,
+              punchline: storyPunchline,
               author: storyAuthor,
               summary: storySummary,
               thumbnailUrl: thumbnailUrl || "/logo-placeholder.png",
+              thumbnailAltText: thumbnailAlt,
+              thumbnailMetaData: thumbnailMeta,
               contentHtml,
               seoTitle: storySeoTitle || storyTitle,
               seoDescription: storySeoDesc || storySummary,
@@ -236,10 +333,13 @@ export default function MasterAdminCMS() {
       const newPost: StoryPost = {
         id: `story-${Date.now()}`,
         title: storyTitle,
+        punchline: storyPunchline,
         author: storyAuthor,
         date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase(),
         readTime: `${Math.max(1, Math.ceil(contentHtml.length / 400))} min read`,
         thumbnailUrl: thumbnailUrl || "/logo-placeholder.png",
+        thumbnailAltText: thumbnailAlt,
+        thumbnailMetaData: thumbnailMeta,
         summary: storySummary || storyTitle,
         contentHtml,
         seoTitle: storySeoTitle || storyTitle,
@@ -249,24 +349,19 @@ export default function MasterAdminCMS() {
       updatedStories.unshift(newPost);
     }
 
-    saveConfig({ ...config, stories: updatedStories }, editingStoryId ? "✨ Story updated!" : "🚀 New story published!");
+    saveConfig({ ...config, stories: updatedStories }, editingStoryId ? "✨ Story updated!" : "🚀 Story published!");
     
     setEditingStoryId(null);
     setStoryTitle("");
+    setStoryPunchline("");
     setStorySummary("");
     setThumbnailUrl("");
+    setThumbnailAlt("");
+    setThumbnailMeta("");
     setStorySeoTitle("");
     setStorySeoDesc("");
     setStorySearchTags("");
     if (editorRef.current) editorRef.current.innerHTML = "";
-  };
-
-  const clearStorage = () => {
-    if (confirm("Reset CMS local storage to default settings?")) {
-      localStorage.removeItem("saade_aala_cms_config");
-      setConfig(DEFAULT_CONFIG);
-      alert("Reset complete!");
-    }
   };
 
   if (!mounted) return null;
@@ -292,12 +387,6 @@ export default function MasterAdminCMS() {
     );
   }
 
-  const homepageSections = config.homepageSections || DEFAULT_CONFIG.homepageSections;
-  const hosts = config.hosts || DEFAULT_CONFIG.hosts;
-  const questions = config.questions || DEFAULT_CONFIG.questions;
-  const milestones = config.milestones || DEFAULT_CONFIG.milestones;
-  const pageSeo = config.pageSeo || DEFAULT_CONFIG.pageSeo;
-
   return (
     <div className="flex justify-center min-h-screen px-4 py-8 bg-[#09090B] text-[#FAFAFA] font-sans">
       <main className="w-full max-w-[900px] flex flex-col gap-6">
@@ -308,14 +397,9 @@ export default function MasterAdminCMS() {
             <span className="text-lg font-black text-[#FFC800]">SAADE AALA MASTER CMS</span>
             <span className="text-xs text-[#A1A1AA] block">Full Website & SEO Management Engine</span>
           </div>
-          <div className="flex gap-2">
-            <button onClick={clearStorage} className="text-[10px] font-bold text-red-400 border border-red-500/30 px-3 py-1.5 rounded-full bg-red-500/10">
-              Reset Config
-            </button>
-            <Link href="/" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800]">
-              ← LIVE SITE
-            </Link>
-          </div>
+          <Link href="/" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800]">
+            ← LIVE WEBSITE
+          </Link>
         </header>
 
         {saveMessage && (
@@ -324,15 +408,14 @@ export default function MasterAdminCMS() {
           </div>
         )}
 
-        {/* Master CMS Navigation Tabs */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-1 bg-[#141417] p-1.5 rounded-2xl border border-[#27272A] text-center">
+        {/* Master Navigation */}
+        <div className="grid grid-cols-5 gap-1 bg-[#141417] p-1.5 rounded-2xl border border-[#27272A] text-center">
           {[
-            { id: "layout", label: "🏠 Homepage" },
-            { id: "logos", label: "🎨 Logos" },
-            { id: "team", label: "🎙️ Team & Q&A" },
-            { id: "about", label: "📖 Timeline" },
-            { id: "stories", label: "✍️ Stories Editor" },
-            { id: "seo", label: "🔍 Page SEO" },
+            { id: "home", label: "🏠 Homepage" },
+            { id: "team", label: "🎙️ Team Page" },
+            { id: "stories", label: "✍️ Stories & Editor" },
+            { id: "about", label: "📖 About & Stats" },
+            { id: "seo", label: "🔍 Global SEO" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -346,117 +429,220 @@ export default function MasterAdminCMS() {
           ))}
         </div>
 
-        {/* TAB 1: HOMEPAGE */}
-        {activeTab === "layout" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
-            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Homepage Section Order & Visibility</h2>
-            <div className="flex flex-col gap-3">
-              {homepageSections.map((section, idx) => (
-                <div key={section.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+        {/* TAB 1: HOMEPAGE MANAGER */}
+        {activeTab === "home" && (
+          <section className="flex flex-col gap-6">
+            
+            {/* Social Media Links */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Homepage Social Media Links</h2>
+                <button
+                  onClick={() => {
+                    const newSocial: SocialLink = { id: `s-${Date.now()}`, platform: "Instagram", url: "https://instagram.com" };
+                    saveConfig({ ...config, homeSocials: [...(config.homeSocials || []), newSocial] }, "Social link added!");
+                  }}
+                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
+                >
+                  + Add Social Link
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {(config.homeSocials || []).map((social, idx) => (
+                  <div key={social.id} className="bg-[#09090B] border border-[#27272A] p-3 rounded-xl flex items-center justify-between gap-2">
                     <input
-                      type="checkbox"
-                      checked={section.enabled}
-                      onChange={() => {
-                        const updated = [...homepageSections];
-                        updated[idx].enabled = !updated[idx].enabled;
-                        saveConfig({ ...config, homepageSections: updated }, "Homepage visibility saved!");
+                      type="text"
+                      value={social.platform}
+                      onChange={(e) => {
+                        const updated = [...config.homeSocials];
+                        updated[idx].platform = e.target.value;
+                        saveConfig({ ...config, homeSocials: updated }, "Updated platform!");
                       }}
-                      className="w-4 h-4 accent-[#FFC800] cursor-pointer"
+                      className="bg-[#141417] border border-[#27272A] rounded-lg p-2 text-xs text-white w-1/3"
+                      placeholder="Platform"
                     />
-                    <span className={`text-xs font-bold ${section.enabled ? "text-white" : "text-[#52525B] line-through"}`}>
-                      {section.title}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      disabled={idx === 0}
-                      onClick={() => {
-                        const updated = [...homepageSections];
-                        const temp = updated[idx - 1];
-                        updated[idx - 1] = updated[idx];
-                        updated[idx] = temp;
-                        saveConfig({ ...config, homepageSections: updated }, "Order updated!");
+                    <input
+                      type="text"
+                      value={social.url}
+                      onChange={(e) => {
+                        const updated = [...config.homeSocials];
+                        updated[idx].url = e.target.value;
+                        saveConfig({ ...config, homeSocials: updated }, "Updated URL!");
                       }}
-                      className="px-2.5 py-1 bg-[#141417] border border-[#27272A] text-white text-xs font-bold rounded-lg disabled:opacity-30"
-                    >
-                      ▲ UP
-                    </button>
+                      className="bg-[#141417] border border-[#27272A] rounded-lg p-2 text-xs text-white w-full"
+                      placeholder="URL"
+                    />
                     <button
-                      disabled={idx === homepageSections.length - 1}
                       onClick={() => {
-                        const updated = [...homepageSections];
-                        const temp = updated[idx + 1];
-                        updated[idx + 1] = updated[idx];
-                        updated[idx] = temp;
-                        saveConfig({ ...config, homepageSections: updated }, "Order updated!");
+                        const updated = config.homeSocials.filter((s) => s.id !== social.id);
+                        saveConfig({ ...config, homeSocials: updated }, "Social deleted!");
                       }}
-                      className="px-2.5 py-1 bg-[#141417] border border-[#27272A] text-white text-xs font-bold rounded-lg disabled:opacity-30"
+                      className="text-xs text-red-400 font-bold px-2"
                     >
-                      ▼ DOWN
+                      Delete
                     </button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {/* 16:9 Banner Slides */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">16:9 Episode Banner Slides</h2>
+                <button
+                  onClick={() => {
+                    const newB: EpisodeBanner = {
+                      id: `b-${Date.now()}`,
+                      title: "New Episode Banner",
+                      duration: "45 MINS",
+                      imageUrl: "/logo-placeholder.png",
+                      altText: "Banner Alt Text",
+                      metaData: "Episode Art",
+                      streamUrl: "https://youtube.com",
+                    };
+                    saveConfig({ ...config, episodeBanners: [...(config.episodeBanners || []), newB] }, "Banner added!");
+                  }}
+                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
+                >
+                  + Add Banner Slide
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {(config.episodeBanners || []).map((b, idx) => (
+                  <div key={b.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
+                    <div className="flex justify-between">
+                      <span className="text-[10px] font-bold text-[#FFC800]">SLIDE #{idx + 1}</span>
+                      <button
+                        onClick={() => {
+                          const updated = config.episodeBanners.filter((item) => item.id !== b.id);
+                          saveConfig({ ...config, episodeBanners: updated }, "Banner deleted!");
+                        }}
+                        className="text-xs text-red-400 font-bold"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={b.title}
+                      onChange={(e) => {
+                        const updated = [...config.episodeBanners];
+                        updated[idx].title = e.target.value;
+                        saveConfig({ ...config, episodeBanners: updated }, "Banner updated!");
+                      }}
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                      placeholder="Title"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={b.altText}
+                        onChange={(e) => {
+                          const updated = [...config.episodeBanners];
+                          updated[idx].altText = e.target.value;
+                          saveConfig({ ...config, episodeBanners: updated }, "Banner updated!");
+                        }}
+                        className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                        placeholder="Alt Text"
+                      />
+                      <input
+                        type="text"
+                        value={b.metaData}
+                        onChange={(e) => {
+                          const updated = [...config.episodeBanners];
+                          updated[idx].metaData = e.target.value;
+                          saveConfig({ ...config, episodeBanners: updated }, "Banner updated!");
+                        }}
+                        className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                        placeholder="Image Metadata"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Homepage Team Photo */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Homepage Team Group Photo</h2>
+              <input
+                type="text"
+                value={config.homepageTeamPhoto?.titleText || ""}
+                onChange={(e) => {
+                  const updated = { ...config.homepageTeamPhoto, titleText: e.target.value };
+                  saveConfig({ ...config, homepageTeamPhoto: updated }, "Title text updated!");
+                }}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
+                placeholder="Section Tag Title"
+              />
+              <input
+                type="text"
+                value={config.homepageTeamPhoto?.altText || ""}
+                onChange={(e) => {
+                  const updated = { ...config.homepageTeamPhoto, altText: e.target.value };
+                  saveConfig({ ...config, homepageTeamPhoto: updated }, "Alt text updated!");
+                }}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
+                placeholder="Photo Alt Text"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      const updated = { ...config.homepageTeamPhoto, url: reader.result as string };
+                      saveConfig({ ...config, homepageTeamPhoto: updated }, "Group photo updated!");
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="text-xs text-[#A1A1AA]"
+              />
+            </div>
+
           </section>
         )}
 
-        {/* TAB 2: BRANDING LOGOS */}
-        {activeTab === "logos" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
-            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Site Brand Logos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
-                <span className="text-xs font-bold text-white">Header Logo</span>
-                <div className="h-20 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-2">
-                  <img src={config.headerLogoUrl || "/logo-placeholder.png"} alt="Header Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => saveConfig({ ...config, headerLogoUrl: reader.result as string }, "Header logo updated!");
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="text-xs text-[#A1A1AA]"
-                />
-              </div>
-
-              <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
-                <span className="text-xs font-bold text-white">Footer Logo (500x500 PNG)</span>
-                <div className="h-20 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-2">
-                  <img src={config.footerLogoUrl || "/logo-placeholder.png"} alt="Footer Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => saveConfig({ ...config, footerLogoUrl: reader.result as string }, "Footer logo updated!");
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="text-xs text-[#A1A1AA]"
-                />
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* TAB 3: TEAM & FAN Q&A */}
+        {/* TAB 2: TEAM PAGE MANAGER */}
         {activeTab === "team" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
-            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles & Fan Q&A Inbox</h2>
-            <div className="flex flex-col gap-4">
-              {Object.keys(hosts).map((key) => {
-                const host = hosts[key];
+          <section className="flex flex-col gap-6">
+            
+            {/* Team Page Text Overrides */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Team Page Headings & Text</h2>
+              <input
+                type="text"
+                value={config.teamPageContent?.heroHeadline || ""}
+                onChange={(e) => {
+                  const updated = { ...config.teamPageContent, heroHeadline: e.target.value };
+                  saveConfig({ ...config, teamPageContent: updated }, "Headline updated!");
+                }}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
+                placeholder="Page Headline"
+              />
+              <textarea
+                rows={2}
+                value={config.teamPageContent?.heroSubheadline || ""}
+                onChange={(e) => {
+                  const updated = { ...config.teamPageContent, heroSubheadline: e.target.value };
+                  saveConfig({ ...config, teamPageContent: updated }, "Subheadline updated!");
+                }}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white resize-none"
+                placeholder="Subheadline Description"
+              />
+            </div>
+
+            {/* Host Profile Editor */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles</h2>
+              {Object.keys(config.hosts || {}).map((key) => {
+                const host = config.hosts[key];
                 return (
                   <div key={key} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                     <span className="text-xs font-black text-[#FFC800] uppercase">{host.name}</span>
@@ -464,46 +650,84 @@ export default function MasterAdminCMS() {
                       type="text"
                       value={host.role}
                       onChange={(e) => {
-                        const updated = { ...hosts, [key]: { ...host, role: e.target.value } };
+                        const updated = { ...config.hosts, [key]: { ...host, role: e.target.value } };
                         saveConfig({ ...config, hosts: updated }, "Host updated!");
                       }}
-                      className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
-                      placeholder="Role Title"
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                      placeholder="Role"
+                    />
+                    <textarea
+                      rows={2}
+                      value={host.journey}
+                      onChange={(e) => {
+                        const updated = { ...config.hosts, [key]: { ...host, journey: e.target.value } };
+                        saveConfig({ ...config, hosts: updated }, "Journey updated!");
+                      }}
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white resize-none"
+                      placeholder="Journey Bio"
                     />
                     <input
                       type="text"
                       value={host.quote}
                       onChange={(e) => {
-                        const updated = { ...hosts, [key]: { ...host, quote: e.target.value } };
+                        const updated = { ...config.hosts, [key]: { ...host, quote: e.target.value } };
                         saveConfig({ ...config, hosts: updated }, "Quote updated!");
                       }}
-                      className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
-                      placeholder="Signature Quote"
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                      placeholder="Quote"
+                    />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const updated = { ...config.hosts, [key]: { ...host, photoUrl: reader.result as string } };
+                            saveConfig({ ...config, hosts: updated }, "Host photo updated!");
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="text-xs text-[#A1A1AA]"
                     />
                   </div>
                 );
               })}
             </div>
 
-            <div className="pt-4 border-t border-[#27272A] flex flex-col gap-3">
-              <h3 className="text-xs font-black text-white uppercase">Fan Question Approval Feed</h3>
-              {questions.map((q) => (
+            {/* Q&A Dashboard */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Fan Q&A Approval Inbox</h2>
+              {(config.questions || []).map((q) => (
                 <div key={q.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
-                  <span className="text-xs font-bold text-[#FFC800]">👤 {q.fanName}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-[#FFC800]">👤 {q.fanName}</span>
+                    <button
+                      onClick={() => {
+                        const updated = config.questions.filter((item) => item.id !== q.id);
+                        saveConfig({ ...config, questions: updated }, "Question deleted!");
+                      }}
+                      className="text-xs text-red-400 font-bold"
+                    >
+                      Delete
+                    </button>
+                  </div>
                   <p className="text-xs text-white">"{q.question}"</p>
                   <textarea
                     rows={2}
                     defaultValue={q.answer}
                     onBlur={(e) => {
-                      const updated = questions.map((item) => (item.id === q.id ? { ...item, answer: e.target.value } : item));
-                      saveConfig({ ...config, questions: updated }, "Reply saved!");
+                      const updated = config.questions.map((item) => (item.id === q.id ? { ...item, answer: e.target.value } : item));
+                      saveConfig({ ...config, questions: updated }, "Answer saved!");
                     }}
                     placeholder="Host answer..."
                     className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white resize-none"
                   />
                   <button
                     onClick={() => {
-                      const updated = questions.map((item) => (item.id === q.id ? { ...item, isApproved: !item.isApproved } : item));
+                      const updated = config.questions.map((item) => (item.id === q.id ? { ...item, isApproved: !item.isApproved } : item));
                       saveConfig({ ...config, questions: updated }, "Approval status toggled!");
                     }}
                     className={`py-1.5 rounded-xl text-xs font-bold ${q.isApproved ? "bg-green-500/20 text-green-400" : "bg-[#FFC800] text-black"}`}
@@ -513,112 +737,85 @@ export default function MasterAdminCMS() {
                 </div>
               ))}
             </div>
+
           </section>
         )}
 
-        {/* TAB 4: ABOUT MILESTONES */}
-        {activeTab === "about" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">About Us Timeline Milestones</h2>
-              <button
-                onClick={() => {
-                  const newM: Milestone = {
-                    id: `m-${Date.now()}`,
-                    tag: "NEW MILESTONE",
-                    title: "New Story Stop",
-                    description: "Describe milestone...",
-                    imageUrl: "/logo-placeholder.png",
-                  };
-                  saveConfig({ ...config, milestones: [...milestones, newM] }, "Milestone added!");
-                }}
-                className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
-              >
-                + Add Milestone
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              {milestones.map((ms, idx) => (
-                <div key={ms.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
-                  <div className="flex justify-between">
-                    <span className="text-[10px] font-bold text-[#FFC800]">STOP #{idx + 1}</span>
+        {/* TAB 3: STORIES MANAGER & PROFESSIONAL RICH TEXT EDITOR */}
+        {activeTab === "stories" && (
+          <section className="flex flex-col gap-6">
+            
+            {/* Published Stories Management Panel */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Manage Published Stories</h2>
+              {(config.stories || []).map((story) => (
+                <div key={story.id} className="bg-[#09090B] border border-[#27272A] p-3 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-white block">{story.title}</span>
+                    <span className="text-[10px] text-[#A1A1AA]">By {story.author} • {story.date}</span>
+                  </div>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        const updated = milestones.filter((m) => m.id !== ms.id);
-                        saveConfig({ ...config, milestones: updated }, "Milestone deleted!");
+                        setEditingStoryId(story.id);
+                        setStoryTitle(story.title);
+                        setStoryPunchline(story.punchline || "");
+                        setStoryAuthor(story.author);
+                        setStorySummary(story.summary);
+                        setThumbnailUrl(story.thumbnailUrl);
+                        setThumbnailAlt(story.thumbnailAltText || "");
+                        setThumbnailMeta(story.thumbnailMetaData || "");
+                        setStorySeoTitle(story.seoTitle);
+                        setStorySeoDesc(story.seoDescription);
+                        setStorySearchTags((story.searchTags || []).join(", "));
+                        if (editorRef.current) editorRef.current.innerHTML = story.contentHtml;
                       }}
-                      className="text-[10px] text-red-400 font-bold"
+                      className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-lg"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        const updated = config.stories.filter((s) => s.id !== story.id);
+                        saveConfig({ ...config, stories: updated }, "Story deleted!");
+                      }}
+                      className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-lg"
                     >
                       Delete
                     </button>
                   </div>
-                  <input
-                    type="text"
-                    value={ms.title}
-                    onChange={(e) => {
-                      const updated = [...milestones];
-                      updated[idx].title = e.target.value;
-                      saveConfig({ ...config, milestones: updated }, "Milestone updated!");
-                    }}
-                    className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white"
-                  />
-                  <textarea
-                    rows={2}
-                    value={ms.description}
-                    onChange={(e) => {
-                      const updated = [...milestones];
-                      updated[idx].description = e.target.value;
-                      saveConfig({ ...config, milestones: updated }, "Milestone updated!");
-                    }}
-                    className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-1.5 text-xs text-white resize-none"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#A1A1AA]">4:3 Photo:</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            const updated = [...milestones];
-                            updated[idx].imageUrl = reader.result as string;
-                            saveConfig({ ...config, milestones: updated }, "Photo saved!");
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="text-[10px] text-[#A1A1AA]"
-                    />
-                  </div>
                 </div>
               ))}
             </div>
-          </section>
-        )}
 
-        {/* TAB 5: STORIES EDITOR */}
-        {activeTab === "stories" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
-            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Short Stories Rich Text Editor</h2>
+            {/* Rich Text Editor Form */}
+            <form onSubmit={handleSaveStory} className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">
+                {editingStoryId ? "✏️ Edit Story" : "✍️ Write Story"}
+              </h2>
 
-            <form onSubmit={handleSaveStory} className="flex flex-col gap-4">
               <input
                 type="text"
                 required
                 placeholder="Story Title"
                 value={storyTitle}
                 onChange={(e) => setStoryTitle(e.target.value)}
-                className="bg-[#09090B] border border-[#27272A] rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#FFC800] outline-none"
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Story Punchline / Comedy Teaser"
+                value={storyPunchline}
+                onChange={(e) => setStoryPunchline(e.target.value)}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
+              />
+
+              <div className="grid grid-cols-2 gap-2">
                 <select
                   value={storyAuthor}
                   onChange={(e) => setStoryAuthor(e.target.value)}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
+                  className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
                 >
                   <option value="Harshdeep Singh">Harshdeep Singh</option>
                   <option value="Sarabjeet Singh">Sarabjeet Singh</option>
@@ -627,99 +824,216 @@ export default function MasterAdminCMS() {
 
                 <input
                   type="text"
-                  placeholder="Summary / Excerpt"
+                  placeholder="Summary Excerpt"
                   value={storySummary}
                   onChange={(e) => setStorySummary(e.target.value)}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
+                  className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
                 />
               </div>
 
-              {/* RICH TEXT TOOLBAR */}
-              <div className="flex flex-col border border-[#27272A] rounded-2xl overflow-hidden bg-[#09090B]">
+              {/* Rich Text Editor Toolbar (H1, H2, H3, Image, Link, Table) */}
+              <div className="border border-[#27272A] rounded-2xl overflow-hidden bg-[#09090B]">
                 <div className="flex flex-wrap gap-1 bg-[#141417] p-2 border-b border-[#27272A]">
-                  <button type="button" onClick={() => formatText("bold")} className="px-2.5 py-1 bg-[#09090B] text-white text-xs font-black rounded hover:text-[#FFC800]">B</button>
-                  <button type="button" onClick={() => formatText("italic")} className="px-2.5 py-1 bg-[#09090B] text-white text-xs italic rounded hover:text-[#FFC800]">I</button>
-                  <button type="button" onClick={() => formatText("formatBlock", "<h2>")} className="px-2.5 py-1 bg-[#09090B] text-[#FFC800] text-xs font-black rounded">H2</button>
-                  <button type="button" onClick={() => formatText("formatBlock", "<h3>")} className="px-2.5 py-1 bg-[#09090B] text-white text-xs font-bold rounded">H3</button>
-                  <button type="button" onClick={() => formatText("insertUnorderedList")} className="px-2.5 py-1 bg-[#09090B] text-white text-xs rounded">• List</button>
-                  <button type="button" onClick={() => formatText("removeFormat")} className="px-2.5 py-1 bg-red-500/20 text-red-400 text-xs rounded">Clear</button>
+                  <button type="button" onClick={() => formatText("bold")} className="px-2 py-1 bg-[#09090B] text-xs font-black text-white rounded">B</button>
+                  <button type="button" onClick={() => formatText("italic")} className="px-2 py-1 bg-[#09090B] text-xs italic text-white rounded">I</button>
+                  <button type="button" onClick={() => formatText("formatBlock", "<h1>")} className="px-2 py-1 bg-[#09090B] text-xs font-black text-[#FFC800] rounded">H1</button>
+                  <button type="button" onClick={() => formatText("formatBlock", "<h2>")} className="px-2 py-1 bg-[#09090B] text-xs font-black text-[#FFC800] rounded">H2</button>
+                  <button type="button" onClick={() => formatText("formatBlock", "<h3>")} className="px-2 py-1 bg-[#09090B] text-xs font-bold text-white rounded">H3</button>
+                  <button type="button" onClick={() => formatText("insertUnorderedList")} className="px-2 py-1 bg-[#09090B] text-xs text-white rounded">• List</button>
+                  <button type="button" onClick={insertLink} className="px-2 py-1 bg-[#09090B] text-xs text-[#FFC800] rounded">🔗 Link</button>
+                  <button type="button" onClick={insertImage} className="px-2 py-1 bg-[#09090B] text-xs text-[#FFC800] rounded">🖼️ Image</button>
+                  <button type="button" onClick={insertTable} className="px-2 py-1 bg-[#09090B] text-xs text-[#FFC800] rounded">📊 Table</button>
                 </div>
 
                 <div
                   ref={editorRef}
                   contentEditable
-                  className="min-h-[220px] p-4 text-xs text-white focus:outline-none leading-relaxed [&_h2]:text-base [&_h2]:font-black [&_h2]:text-[#FFC800] [&_h3]:text-sm [&_h3]:font-bold [&_h3]:text-white"
+                  className="min-h-[220px] p-4 text-xs text-white focus:outline-none leading-relaxed [&_h1]:text-lg [&_h1]:font-black [&_h1]:text-[#FFC800] [&_h2]:text-base [&_h2]:font-black [&_h2]:text-[#FFC800] [&_h3]:text-sm [&_h3]:font-bold [&_h3]:text-white"
                 />
               </div>
 
-              <div className="flex flex-col gap-3 pt-2">
+              {/* Story Thumbnail SEO */}
+              <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
-                  placeholder="Story SEO Meta Title"
-                  value={storySeoTitle}
-                  onChange={(e) => setStorySeoTitle(e.target.value)}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
+                  placeholder="Thumbnail Alt Text"
+                  value={thumbnailAlt}
+                  onChange={(e) => setThumbnailAlt(e.target.value)}
+                  className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
                 />
                 <input
                   type="text"
-                  placeholder="Story SEO Meta Description"
-                  value={storySeoDesc}
-                  onChange={(e) => setStorySeoDesc(e.target.value)}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Search Tags (comma separated)"
-                  value={storySearchTags}
-                  onChange={(e) => setStorySearchTags(e.target.value)}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
+                  placeholder="Thumbnail Metadata"
+                  value={thumbnailMeta}
+                  onChange={(e) => setThumbnailMeta(e.target.value)}
+                  className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
                 />
               </div>
+
+              <input
+                type="text"
+                placeholder="Story SEO Meta Title"
+                value={storySeoTitle}
+                onChange={(e) => setStorySeoTitle(e.target.value)}
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
+              />
 
               <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-lg">
                 PUBLISH STORY 🚀
               </button>
             </form>
+
           </section>
         )}
 
-        {/* TAB 6: GLOBAL PAGE SEO */}
-        {activeTab === "seo" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
-            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Global Page SEO Meta Manager</h2>
-            <div className="flex flex-col gap-4">
-              {(["home", "team", "stories", "about", "game"] as const).map((pageKey) => (
-                <div key={pageKey} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
-                  <span className="text-xs font-black text-[#FFC800] uppercase">Route: /{pageKey === "home" ? "" : pageKey}</span>
+        {/* TAB 4: ABOUT TIMELINE & ACHIEVEMENTS */}
+        {activeTab === "about" && (
+          <section className="flex flex-col gap-6">
+            
+            {/* Achievements Counter Bar */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Achievements Counters</h2>
+              <div className="grid grid-cols-3 gap-3">
+                {(config.achievements || []).map((ach, idx) => (
+                  <div key={ach.id} className="bg-[#09090B] border border-[#27272A] p-3 rounded-xl flex flex-col gap-1">
+                    <input
+                      type="text"
+                      value={ach.number}
+                      onChange={(e) => {
+                        const updated = [...config.achievements];
+                        updated[idx].number = e.target.value;
+                        saveConfig({ ...config, achievements: updated }, "Achievement updated!");
+                      }}
+                      className="bg-[#141417] border border-[#27272A] rounded p-1 text-xs text-[#FFC800] font-black"
+                    />
+                    <input
+                      type="text"
+                      value={ach.label}
+                      onChange={(e) => {
+                        const updated = [...config.achievements];
+                        updated[idx].label = e.target.value;
+                        saveConfig({ ...config, achievements: updated }, "Achievement updated!");
+                      }}
+                      className="bg-[#141417] border border-[#27272A] rounded p-1 text-[10px] text-white"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Timeline Milestones with Metadata */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Milestone Timeline Stops</h2>
+                <button
+                  onClick={() => {
+                    const newM: Milestone = {
+                      id: `m-${Date.now()}`,
+                      tag: "MILESTONE",
+                      title: "New Story Stop",
+                      description: "Description",
+                      imageUrl: "/logo-placeholder.png",
+                      imageAltText: "Milestone Photo",
+                      imageMetaData: "Studio Stop",
+                    };
+                    saveConfig({ ...config, milestones: [...(config.milestones || []), newM] }, "Milestone added!");
+                  }}
+                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
+                >
+                  + Add Milestone
+                </button>
+              </div>
+
+              {(config.milestones || []).map((ms, idx) => (
+                <div key={ms.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
+                  <div className="flex justify-between">
+                    <span className="text-[10px] font-bold text-[#FFC800]">STOP #{idx + 1}</span>
+                    <button
+                      onClick={() => {
+                        const updated = config.milestones.filter((m) => m.id !== ms.id);
+                        saveConfig({ ...config, milestones: updated }, "Milestone deleted!");
+                      }}
+                      className="text-xs text-red-400 font-bold"
+                    >
+                      Delete
+                    </button>
+                  </div>
                   <input
                     type="text"
-                    value={pageSeo[pageKey]?.title || ""}
+                    value={ms.title}
                     onChange={(e) => {
-                      const updated = {
-                        ...pageSeo,
-                        [pageKey]: { ...pageSeo[pageKey], title: e.target.value },
-                      };
-                      saveConfig({ ...config, pageSeo: updated }, "Page SEO updated!");
+                      const updated = [...config.milestones];
+                      updated[idx].title = e.target.value;
+                      saveConfig({ ...config, milestones: updated }, "Milestone updated!");
                     }}
-                    placeholder="Meta Title"
-                    className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
+                    className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
                   />
-                  <input
-                    type="text"
-                    value={pageSeo[pageKey]?.description || ""}
-                    onChange={(e) => {
-                      const updated = {
-                        ...pageSeo,
-                        [pageKey]: { ...pageSeo[pageKey], description: e.target.value },
-                      };
-                      saveConfig({ ...config, pageSeo: updated }, "Page SEO updated!");
-                    }}
-                    placeholder="Meta Description"
-                    className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={ms.imageAltText || ""}
+                      onChange={(e) => {
+                        const updated = [...config.milestones];
+                        updated[idx].imageAltText = e.target.value;
+                        saveConfig({ ...config, milestones: updated }, "Alt text updated!");
+                      }}
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                      placeholder="Image Alt Text"
+                    />
+                    <input
+                      type="text"
+                      value={ms.imageMetaData || ""}
+                      onChange={(e) => {
+                        const updated = [...config.milestones];
+                        updated[idx].imageMetaData = e.target.value;
+                        saveConfig({ ...config, milestones: updated }, "Metadata updated!");
+                      }}
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                      placeholder="Image Metadata"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
+
+          </section>
+        )}
+
+        {/* TAB 5: GLOBAL PAGE SEO */}
+        {activeTab === "seo" && (
+          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Page SEO Settings</h2>
+            {(["home", "team", "stories", "about", "game"] as const).map((pageKey) => (
+              <div key={pageKey} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
+                <span className="text-xs font-black text-[#FFC800] uppercase">Route: /{pageKey === "home" ? "" : pageKey}</span>
+                <input
+                  type="text"
+                  value={config.pageSeo?.[pageKey]?.title || ""}
+                  onChange={(e) => {
+                    const updated = {
+                      ...config.pageSeo,
+                      [pageKey]: { ...config.pageSeo[pageKey], title: e.target.value },
+                    };
+                    saveConfig({ ...config, pageSeo: updated }, "SEO updated!");
+                  }}
+                  className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                  placeholder="Meta Title"
+                />
+                <input
+                  type="text"
+                  value={config.pageSeo?.[pageKey]?.description || ""}
+                  onChange={(e) => {
+                    const updated = {
+                      ...config.pageSeo,
+                      [pageKey]: { ...config.pageSeo[pageKey], description: e.target.value },
+                    };
+                    saveConfig({ ...config, pageSeo: updated }, "SEO updated!");
+                  }}
+                  className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                  placeholder="Meta Description"
+                />
+              </div>
+            ))}
           </section>
         )}
 
