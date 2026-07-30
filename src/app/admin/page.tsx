@@ -74,7 +74,6 @@ export interface MasterSiteConfig {
   };
 }
 
-// --- DEFAULT STATE ---
 const DEFAULT_CONFIG: MasterSiteConfig = {
   headerLogoUrl: "/logo-placeholder.png",
   footerLogoUrl: "/logo-placeholder.png",
@@ -143,6 +142,7 @@ const DEFAULT_CONFIG: MasterSiteConfig = {
 };
 
 export default function MasterAdminCMS() {
+  const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState<"layout" | "logos" | "team" | "about" | "stories" | "seo">("layout");
@@ -161,18 +161,26 @@ export default function MasterAdminCMS() {
   const [storySeoDesc, setStorySeoDesc] = useState("");
   const [storySearchTags, setStorySearchTags] = useState("");
 
-  // Load Combined Config
   useEffect(() => {
-    const saved = localStorage.getItem("saade_aala_cms_config");
-    if (saved) {
-      try { setConfig(JSON.parse(saved)); } catch (e) { console.error(e); }
+    setMounted(true);
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("saade_aala_cms_config");
+      if (saved) {
+        try {
+          setConfig(JSON.parse(saved));
+        } catch (e) {
+          console.error("Error parsing CMS config", e);
+        }
+      }
     }
   }, []);
 
   const saveConfig = (updated: MasterSiteConfig, msg: string) => {
     setConfig(updated);
-    localStorage.setItem("saade_aala_cms_config", JSON.stringify(updated));
-    localStorage.setItem("saade_aala_about_config", JSON.stringify({ milestones: updated.milestones }));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("saade_aala_cms_config", JSON.stringify(updated));
+      localStorage.setItem("saade_aala_about_config", JSON.stringify({ milestones: updated.milestones }));
+    }
     setSaveMessage(msg);
     setTimeout(() => setSaveMessage(""), 3000);
   };
@@ -183,10 +191,11 @@ export default function MasterAdminCMS() {
     else alert("Incorrect passcode!");
   };
 
-  // Rich Text Command Executor
   const formatText = (command: string, value: string | undefined = undefined) => {
-    document.execCommand(command, false, value);
-    if (editorRef.current) editorRef.current.focus();
+    if (typeof document !== "undefined") {
+      document.execCommand(command, false, value);
+      if (editorRef.current) editorRef.current.focus();
+    }
   };
 
   const handleSaveStory = (e: React.FormEvent) => {
@@ -240,6 +249,8 @@ export default function MasterAdminCMS() {
     setStorySearchTags("");
     if (editorRef.current) editorRef.current.innerHTML = "";
   };
+
+  if (!mounted) return null;
 
   if (!isAuthenticated) {
     return (
@@ -361,17 +372,15 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 2: BRANDING LOGOS (HEADER & FOOTER 500x500) */}
+        {/* TAB 2: BRANDING LOGOS */}
         {activeTab === "logos" && (
           <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
             <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Site Brand Logos</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Header Logo */}
               <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                 <span className="text-xs font-bold text-white">Header Logo</span>
                 <div className="h-20 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-2">
-                  <img src={config.headerLogoUrl} alt="Header Logo" className="max-h-full object-contain" onError={(e) => (e.target as HTMLElement).style.display = "none"} />
+                  <img src={config.headerLogoUrl} alt="Header Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
                 </div>
                 <input
                   type="file"
@@ -388,11 +397,10 @@ export default function MasterAdminCMS() {
                 />
               </div>
 
-              {/* 500x500 Footer Logo */}
               <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                 <span className="text-xs font-bold text-white">Footer Logo (500x500 PNG)</span>
                 <div className="h-20 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-2">
-                  <img src={config.footerLogoUrl} alt="Footer Logo" className="max-h-full object-contain" onError={(e) => (e.target as HTMLElement).style.display = "none"} />
+                  <img src={config.footerLogoUrl} alt="Footer Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
                 </div>
                 <input
                   type="file"
@@ -408,7 +416,6 @@ export default function MasterAdminCMS() {
                   className="text-xs text-[#A1A1AA]"
                 />
               </div>
-
             </div>
           </section>
         )}
@@ -417,10 +424,8 @@ export default function MasterAdminCMS() {
         {activeTab === "team" && (
           <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
             <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles & Fan Q&A Inbox</h2>
-            
-            {/* Host Profiles */}
             <div className="flex flex-col gap-4">
-              {Object.keys(config.hosts).map((key) => {
+              {Object.keys(config.hosts || {}).map((key) => {
                 const host = config.hosts[key];
                 return (
                   <div key={key} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
@@ -450,10 +455,9 @@ export default function MasterAdminCMS() {
               })}
             </div>
 
-            {/* Q&A Inbox */}
             <div className="pt-4 border-t border-[#27272A] flex flex-col gap-3">
               <h3 className="text-xs font-black text-white uppercase">Fan Question Approval Feed</h3>
-              {config.questions.map((q) => (
+              {(config.questions || []).map((q) => (
                 <div key={q.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
                   <span className="text-xs font-bold text-[#FFC800]">👤 {q.fanName}</span>
                   <p className="text-xs text-white">"{q.question}"</p>
@@ -461,7 +465,7 @@ export default function MasterAdminCMS() {
                     rows={2}
                     defaultValue={q.answer}
                     onBlur={(e) => {
-                      const updated = config.questions.map(item => item.id === q.id ? { ...item, answer: e.target.value } : item);
+                      const updated = config.questions.map((item) => (item.id === q.id ? { ...item, answer: e.target.value } : item));
                       saveConfig({ ...config, questions: updated }, "Reply saved!");
                     }}
                     placeholder="Host answer..."
@@ -469,7 +473,7 @@ export default function MasterAdminCMS() {
                   />
                   <button
                     onClick={() => {
-                      const updated = config.questions.map(item => item.id === q.id ? { ...item, isApproved: !item.isApproved } : item);
+                      const updated = config.questions.map((item) => (item.id === q.id ? { ...item, isApproved: !item.isApproved } : item));
                       saveConfig({ ...config, questions: updated }, "Approval status toggled!");
                     }}
                     className={`py-1.5 rounded-xl text-xs font-bold ${q.isApproved ? "bg-green-500/20 text-green-400" : "bg-[#FFC800] text-black"}`}
@@ -482,7 +486,7 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 4: ABOUT MILESTONES (4:3 PHOTOS) */}
+        {/* TAB 4: ABOUT MILESTONES */}
         {activeTab === "about" && (
           <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
             <div className="flex justify-between items-center">
@@ -496,7 +500,7 @@ export default function MasterAdminCMS() {
                     description: "Describe milestone...",
                     imageUrl: "/logo-placeholder.png",
                   };
-                  saveConfig({ ...config, milestones: [...config.milestones, newM] }, "Milestone added!");
+                  saveConfig({ ...config, milestones: [...(config.milestones || []), newM] }, "Milestone added!");
                 }}
                 className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
               >
@@ -505,13 +509,13 @@ export default function MasterAdminCMS() {
             </div>
 
             <div className="flex flex-col gap-4">
-              {config.milestones.map((ms, idx) => (
+              {(config.milestones || []).map((ms, idx) => (
                 <div key={ms.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
                   <div className="flex justify-between">
                     <span className="text-[10px] font-bold text-[#FFC800]">STOP #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        const updated = config.milestones.filter(m => m.id !== ms.id);
+                        const updated = config.milestones.filter((m) => m.id !== ms.id);
                         saveConfig({ ...config, milestones: updated }, "Milestone deleted!");
                       }}
                       className="text-[10px] text-red-400 font-bold"
@@ -565,7 +569,7 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 5: STORIES & RICH TEXT EDITOR WITH TOOLBAR */}
+        {/* TAB 5: STORIES EDITOR */}
         {activeTab === "stories" && (
           <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
             <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Short Stories Rich Text Editor</h2>
@@ -618,7 +622,6 @@ export default function MasterAdminCMS() {
                 />
               </div>
 
-              {/* Story Thumbnail & SEO */}
               <div className="flex flex-col gap-3 pt-2">
                 <input
                   type="text"
@@ -650,20 +653,22 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 6: GLOBAL PAGE SEO MANAGER */}
+        {/* TAB 6: GLOBAL PAGE SEO */}
         {activeTab === "seo" && (
           <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
             <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Global Page SEO Meta Manager</h2>
-            
             <div className="flex flex-col gap-4">
               {(["home", "team", "stories", "about", "game"] as const).map((pageKey) => (
                 <div key={pageKey} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
                   <span className="text-xs font-black text-[#FFC800] uppercase">Route: /{pageKey === "home" ? "" : pageKey}</span>
                   <input
                     type="text"
-                    value={config.pageSeo[pageKey].title}
+                    value={config.pageSeo?.[pageKey]?.title || ""}
                     onChange={(e) => {
-                      const updated = { ...config.pageSeo, [pageKey]: { ...config.pageSeo[pageKey], title: e.target.value } };
+                      const updated = {
+                        ...config.pageSeo,
+                        [pageKey]: { ...config.pageSeo[pageKey], title: e.target.value },
+                      };
                       saveConfig({ ...config, pageSeo: updated }, "Page SEO updated!");
                     }}
                     placeholder="Meta Title"
@@ -671,9 +676,12 @@ export default function MasterAdminCMS() {
                   />
                   <input
                     type="text"
-                    value={config.pageSeo[pageKey].description}
+                    value={config.pageSeo?.[pageKey]?.description || ""}
                     onChange={(e) => {
-                      const updated = { ...config.pageSeo, [pageKey]: { ...config.pageSeo[pageKey], description: e.target.value } };
+                      const updated = {
+                        ...config.pageSeo,
+                        [pageKey]: { ...config.pageSeo[pageKey], description: e.target.value },
+                      };
                       saveConfig({ ...config, pageSeo: updated }, "Page SEO updated!");
                     }}
                     placeholder="Meta Description"
