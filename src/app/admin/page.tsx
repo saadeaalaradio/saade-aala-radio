@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 
-// --- INTERFACES ---
 export interface HomepageSection {
   id: "webplayer" | "banners" | "hosts_photo" | "social_media" | "mma_game" | "stories";
   title: string;
@@ -167,7 +166,17 @@ export default function MasterAdminCMS() {
       const saved = localStorage.getItem("saade_aala_cms_config");
       if (saved) {
         try {
-          setConfig(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          setConfig({
+            ...DEFAULT_CONFIG,
+            ...parsed,
+            homepageSections: parsed.homepageSections || DEFAULT_CONFIG.homepageSections,
+            hosts: parsed.hosts || DEFAULT_CONFIG.hosts,
+            questions: parsed.questions || DEFAULT_CONFIG.questions,
+            stories: parsed.stories || DEFAULT_CONFIG.stories,
+            milestones: parsed.milestones || DEFAULT_CONFIG.milestones,
+            pageSeo: { ...DEFAULT_CONFIG.pageSeo, ...(parsed.pageSeo || {}) },
+          });
         } catch (e) {
           console.error("Error parsing CMS config", e);
         }
@@ -179,7 +188,6 @@ export default function MasterAdminCMS() {
     setConfig(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("saade_aala_cms_config", JSON.stringify(updated));
-      localStorage.setItem("saade_aala_about_config", JSON.stringify({ milestones: updated.milestones }));
     }
     setSaveMessage(msg);
     setTimeout(() => setSaveMessage(""), 3000);
@@ -187,8 +195,11 @@ export default function MasterAdminCMS() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "saadeaala123") setIsAuthenticated(true);
-    else alert("Incorrect passcode!");
+    if (password === "saadeaala123") {
+      setIsAuthenticated(true);
+    } else {
+      alert("Incorrect passcode!");
+    }
   };
 
   const formatText = (command: string, value: string | undefined = undefined) => {
@@ -203,7 +214,7 @@ export default function MasterAdminCMS() {
     const contentHtml = editorRef.current?.innerHTML || "";
     if (!storyTitle || !contentHtml) return alert("Title and Story Content are required!");
 
-    let updatedStories = [...config.stories];
+    let updatedStories = [...(config.stories || [])];
 
     if (editingStoryId) {
       updatedStories = updatedStories.map((s) =>
@@ -250,6 +261,14 @@ export default function MasterAdminCMS() {
     if (editorRef.current) editorRef.current.innerHTML = "";
   };
 
+  const clearStorage = () => {
+    if (confirm("Reset CMS local storage to default settings?")) {
+      localStorage.removeItem("saade_aala_cms_config");
+      setConfig(DEFAULT_CONFIG);
+      alert("Reset complete!");
+    }
+  };
+
   if (!mounted) return null;
 
   if (!isAuthenticated) {
@@ -273,6 +292,12 @@ export default function MasterAdminCMS() {
     );
   }
 
+  const homepageSections = config.homepageSections || DEFAULT_CONFIG.homepageSections;
+  const hosts = config.hosts || DEFAULT_CONFIG.hosts;
+  const questions = config.questions || DEFAULT_CONFIG.questions;
+  const milestones = config.milestones || DEFAULT_CONFIG.milestones;
+  const pageSeo = config.pageSeo || DEFAULT_CONFIG.pageSeo;
+
   return (
     <div className="flex justify-center min-h-screen px-4 py-8 bg-[#09090B] text-[#FAFAFA] font-sans">
       <main className="w-full max-w-[900px] flex flex-col gap-6">
@@ -283,9 +308,14 @@ export default function MasterAdminCMS() {
             <span className="text-lg font-black text-[#FFC800]">SAADE AALA MASTER CMS</span>
             <span className="text-xs text-[#A1A1AA] block">Full Website & SEO Management Engine</span>
           </div>
-          <Link href="/" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800]">
-            ← LIVE WEBSITE
-          </Link>
+          <div className="flex gap-2">
+            <button onClick={clearStorage} className="text-[10px] font-bold text-red-400 border border-red-500/30 px-3 py-1.5 rounded-full bg-red-500/10">
+              Reset Config
+            </button>
+            <Link href="/" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800]">
+              ← LIVE SITE
+            </Link>
+          </div>
         </header>
 
         {saveMessage && (
@@ -316,19 +346,19 @@ export default function MasterAdminCMS() {
           ))}
         </div>
 
-        {/* TAB 1: HOMEPAGE SECTION REORDER & TOGGLES */}
+        {/* TAB 1: HOMEPAGE */}
         {activeTab === "layout" && (
           <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
             <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Homepage Section Order & Visibility</h2>
             <div className="flex flex-col gap-3">
-              {config.homepageSections.map((section, idx) => (
+              {homepageSections.map((section, idx) => (
                 <div key={section.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
                       checked={section.enabled}
                       onChange={() => {
-                        const updated = [...config.homepageSections];
+                        const updated = [...homepageSections];
                         updated[idx].enabled = !updated[idx].enabled;
                         saveConfig({ ...config, homepageSections: updated }, "Homepage visibility saved!");
                       }}
@@ -342,7 +372,7 @@ export default function MasterAdminCMS() {
                     <button
                       disabled={idx === 0}
                       onClick={() => {
-                        const updated = [...config.homepageSections];
+                        const updated = [...homepageSections];
                         const temp = updated[idx - 1];
                         updated[idx - 1] = updated[idx];
                         updated[idx] = temp;
@@ -353,9 +383,9 @@ export default function MasterAdminCMS() {
                       ▲ UP
                     </button>
                     <button
-                      disabled={idx === config.homepageSections.length - 1}
+                      disabled={idx === homepageSections.length - 1}
                       onClick={() => {
-                        const updated = [...config.homepageSections];
+                        const updated = [...homepageSections];
                         const temp = updated[idx + 1];
                         updated[idx + 1] = updated[idx];
                         updated[idx] = temp;
@@ -380,7 +410,7 @@ export default function MasterAdminCMS() {
               <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                 <span className="text-xs font-bold text-white">Header Logo</span>
                 <div className="h-20 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-2">
-                  <img src={config.headerLogoUrl} alt="Header Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
+                  <img src={config.headerLogoUrl || "/logo-placeholder.png"} alt="Header Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
                 </div>
                 <input
                   type="file"
@@ -400,7 +430,7 @@ export default function MasterAdminCMS() {
               <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                 <span className="text-xs font-bold text-white">Footer Logo (500x500 PNG)</span>
                 <div className="h-20 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-2">
-                  <img src={config.footerLogoUrl} alt="Footer Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
+                  <img src={config.footerLogoUrl || "/logo-placeholder.png"} alt="Footer Logo" className="max-h-full object-contain" onError={(e) => ((e.target as HTMLElement).style.display = "none")} />
                 </div>
                 <input
                   type="file"
@@ -420,13 +450,13 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 3: TEAM & FAN Q&A INBOX */}
+        {/* TAB 3: TEAM & FAN Q&A */}
         {activeTab === "team" && (
           <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
             <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles & Fan Q&A Inbox</h2>
             <div className="flex flex-col gap-4">
-              {Object.keys(config.hosts || {}).map((key) => {
-                const host = config.hosts[key];
+              {Object.keys(hosts).map((key) => {
+                const host = hosts[key];
                 return (
                   <div key={key} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                     <span className="text-xs font-black text-[#FFC800] uppercase">{host.name}</span>
@@ -434,7 +464,7 @@ export default function MasterAdminCMS() {
                       type="text"
                       value={host.role}
                       onChange={(e) => {
-                        const updated = { ...config.hosts, [key]: { ...host, role: e.target.value } };
+                        const updated = { ...hosts, [key]: { ...host, role: e.target.value } };
                         saveConfig({ ...config, hosts: updated }, "Host updated!");
                       }}
                       className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
@@ -444,7 +474,7 @@ export default function MasterAdminCMS() {
                       type="text"
                       value={host.quote}
                       onChange={(e) => {
-                        const updated = { ...config.hosts, [key]: { ...host, quote: e.target.value } };
+                        const updated = { ...hosts, [key]: { ...host, quote: e.target.value } };
                         saveConfig({ ...config, hosts: updated }, "Quote updated!");
                       }}
                       className="bg-[#141417] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
@@ -457,7 +487,7 @@ export default function MasterAdminCMS() {
 
             <div className="pt-4 border-t border-[#27272A] flex flex-col gap-3">
               <h3 className="text-xs font-black text-white uppercase">Fan Question Approval Feed</h3>
-              {(config.questions || []).map((q) => (
+              {questions.map((q) => (
                 <div key={q.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
                   <span className="text-xs font-bold text-[#FFC800]">👤 {q.fanName}</span>
                   <p className="text-xs text-white">"{q.question}"</p>
@@ -465,7 +495,7 @@ export default function MasterAdminCMS() {
                     rows={2}
                     defaultValue={q.answer}
                     onBlur={(e) => {
-                      const updated = config.questions.map((item) => (item.id === q.id ? { ...item, answer: e.target.value } : item));
+                      const updated = questions.map((item) => (item.id === q.id ? { ...item, answer: e.target.value } : item));
                       saveConfig({ ...config, questions: updated }, "Reply saved!");
                     }}
                     placeholder="Host answer..."
@@ -473,7 +503,7 @@ export default function MasterAdminCMS() {
                   />
                   <button
                     onClick={() => {
-                      const updated = config.questions.map((item) => (item.id === q.id ? { ...item, isApproved: !item.isApproved } : item));
+                      const updated = questions.map((item) => (item.id === q.id ? { ...item, isApproved: !item.isApproved } : item));
                       saveConfig({ ...config, questions: updated }, "Approval status toggled!");
                     }}
                     className={`py-1.5 rounded-xl text-xs font-bold ${q.isApproved ? "bg-green-500/20 text-green-400" : "bg-[#FFC800] text-black"}`}
@@ -500,7 +530,7 @@ export default function MasterAdminCMS() {
                     description: "Describe milestone...",
                     imageUrl: "/logo-placeholder.png",
                   };
-                  saveConfig({ ...config, milestones: [...(config.milestones || []), newM] }, "Milestone added!");
+                  saveConfig({ ...config, milestones: [...milestones, newM] }, "Milestone added!");
                 }}
                 className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
               >
@@ -509,13 +539,13 @@ export default function MasterAdminCMS() {
             </div>
 
             <div className="flex flex-col gap-4">
-              {(config.milestones || []).map((ms, idx) => (
+              {milestones.map((ms, idx) => (
                 <div key={ms.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
                   <div className="flex justify-between">
                     <span className="text-[10px] font-bold text-[#FFC800]">STOP #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        const updated = config.milestones.filter((m) => m.id !== ms.id);
+                        const updated = milestones.filter((m) => m.id !== ms.id);
                         saveConfig({ ...config, milestones: updated }, "Milestone deleted!");
                       }}
                       className="text-[10px] text-red-400 font-bold"
@@ -527,7 +557,7 @@ export default function MasterAdminCMS() {
                     type="text"
                     value={ms.title}
                     onChange={(e) => {
-                      const updated = [...config.milestones];
+                      const updated = [...milestones];
                       updated[idx].title = e.target.value;
                       saveConfig({ ...config, milestones: updated }, "Milestone updated!");
                     }}
@@ -537,7 +567,7 @@ export default function MasterAdminCMS() {
                     rows={2}
                     value={ms.description}
                     onChange={(e) => {
-                      const updated = [...config.milestones];
+                      const updated = [...milestones];
                       updated[idx].description = e.target.value;
                       saveConfig({ ...config, milestones: updated }, "Milestone updated!");
                     }}
@@ -553,7 +583,7 @@ export default function MasterAdminCMS() {
                         if (file) {
                           const reader = new FileReader();
                           reader.onloadend = () => {
-                            const updated = [...config.milestones];
+                            const updated = [...milestones];
                             updated[idx].imageUrl = reader.result as string;
                             saveConfig({ ...config, milestones: updated }, "Photo saved!");
                           };
@@ -663,11 +693,11 @@ export default function MasterAdminCMS() {
                   <span className="text-xs font-black text-[#FFC800] uppercase">Route: /{pageKey === "home" ? "" : pageKey}</span>
                   <input
                     type="text"
-                    value={config.pageSeo?.[pageKey]?.title || ""}
+                    value={pageSeo[pageKey]?.title || ""}
                     onChange={(e) => {
                       const updated = {
-                        ...config.pageSeo,
-                        [pageKey]: { ...config.pageSeo[pageKey], title: e.target.value },
+                        ...pageSeo,
+                        [pageKey]: { ...pageSeo[pageKey], title: e.target.value },
                       };
                       saveConfig({ ...config, pageSeo: updated }, "Page SEO updated!");
                     }}
@@ -676,11 +706,11 @@ export default function MasterAdminCMS() {
                   />
                   <input
                     type="text"
-                    value={config.pageSeo?.[pageKey]?.description || ""}
+                    value={pageSeo[pageKey]?.description || ""}
                     onChange={(e) => {
                       const updated = {
-                        ...config.pageSeo,
-                        [pageKey]: { ...config.pageSeo[pageKey], description: e.target.value },
+                        ...pageSeo,
+                        [pageKey]: { ...pageSeo[pageKey], description: e.target.value },
                       };
                       saveConfig({ ...config, pageSeo: updated }, "Page SEO updated!");
                     }}
