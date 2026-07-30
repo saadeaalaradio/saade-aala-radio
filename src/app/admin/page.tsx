@@ -487,7 +487,7 @@ export default function MasterAdminCMS() {
               </div>
             </div>
 
-            {/* 16:9 Banner Slides */}
+            {/* 16:9 Banner Slides with Image Uploader */}
             <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">16:9 Episode Banner Slides</h2>
@@ -512,8 +512,8 @@ export default function MasterAdminCMS() {
 
               <div className="flex flex-col gap-4">
                 {(config.episodeBanners || []).map((b, idx) => (
-                  <div key={b.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
-                    <div className="flex justify-between">
+                  <div key={b.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
                       <span className="text-[10px] font-bold text-[#FFC800]">SLIDE #{idx + 1}</span>
                       <button
                         onClick={() => {
@@ -525,6 +525,7 @@ export default function MasterAdminCMS() {
                         Delete
                       </button>
                     </div>
+
                     <input
                       type="text"
                       value={b.title}
@@ -536,6 +537,29 @@ export default function MasterAdminCMS() {
                       className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
                       placeholder="Title"
                     />
+
+                    {/* 16:9 Thumbnail File Picker */}
+                    <div className="flex items-center gap-3 bg-[#141417] border border-[#27272A] p-3 rounded-xl">
+                      <span className="text-[10px] font-bold text-[#FFC800]">16:9 Image:</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const updated = [...config.episodeBanners];
+                              updated[idx].imageUrl = reader.result as string;
+                              saveConfig({ ...config, episodeBanners: updated }, "Banner thumbnail uploaded!");
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="text-[10px] text-[#A1A1AA] w-full"
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="text"
@@ -588,22 +612,25 @@ export default function MasterAdminCMS() {
                 className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
                 placeholder="Photo Alt Text"
               />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      const updated = { ...config.homepageTeamPhoto, url: reader.result as string };
-                      saveConfig({ ...config, homepageTeamPhoto: updated }, "Group photo updated!");
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-                className="text-xs text-[#A1A1AA]"
-              />
+              <div className="flex items-center gap-3 bg-[#09090B] border border-[#27272A] p-3 rounded-xl">
+                <span className="text-xs font-bold text-[#FFC800]">Upload Photo:</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const updated = { ...config.homepageTeamPhoto, url: reader.result as string };
+                        saveConfig({ ...config, homepageTeamPhoto: updated }, "Group photo updated!");
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="text-xs text-[#A1A1AA]"
+                />
+              </div>
             </div>
 
           </section>
@@ -613,9 +640,9 @@ export default function MasterAdminCMS() {
         {activeTab === "team" && (
           <section className="flex flex-col gap-6">
             
-            {/* Team Page Text Overrides */}
+            {/* Team Page Headings */}
             <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
-              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Team Page Headings & Text</h2>
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Team Page Headings & Copy</h2>
               <input
                 type="text"
                 value={config.teamPageContent?.heroHeadline || ""}
@@ -638,66 +665,133 @@ export default function MasterAdminCMS() {
               />
             </div>
 
-            {/* Host Profile Editor */}
-            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
-              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles</h2>
+            {/* Host Profiles + Social Buttons per Host */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Host Profiles & Socials</h2>
               {Object.keys(config.hosts || {}).map((key) => {
                 const host = config.hosts[key];
                 return (
                   <div key={key} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                     <span className="text-xs font-black text-[#FFC800] uppercase">{host.name}</span>
+                    
                     <input
                       type="text"
                       value={host.role}
                       onChange={(e) => {
                         const updated = { ...config.hosts, [key]: { ...host, role: e.target.value } };
-                        saveConfig({ ...config, hosts: updated }, "Host updated!");
+                        saveConfig({ ...config, hosts: updated }, "Host role updated!");
                       }}
                       className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
-                      placeholder="Role"
+                      placeholder="Role Title"
                     />
+
                     <textarea
                       rows={2}
                       value={host.journey}
                       onChange={(e) => {
                         const updated = { ...config.hosts, [key]: { ...host, journey: e.target.value } };
-                        saveConfig({ ...config, hosts: updated }, "Journey updated!");
+                        saveConfig({ ...config, hosts: updated }, "Host bio updated!");
                       }}
                       className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white resize-none"
                       placeholder="Journey Bio"
                     />
+
                     <input
                       type="text"
                       value={host.quote}
                       onChange={(e) => {
                         const updated = { ...config.hosts, [key]: { ...host, quote: e.target.value } };
-                        saveConfig({ ...config, hosts: updated }, "Quote updated!");
+                        saveConfig({ ...config, hosts: updated }, "Host quote updated!");
                       }}
                       className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
-                      placeholder="Quote"
+                      placeholder="Signature Quote"
                     />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            const updated = { ...config.hosts, [key]: { ...host, photoUrl: reader.result as string } };
-                            saveConfig({ ...config, hosts: updated }, "Host photo updated!");
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="text-xs text-[#A1A1AA]"
-                    />
+
+                    <div className="flex items-center gap-3 bg-[#141417] border border-[#27272A] p-2.5 rounded-xl">
+                      <span className="text-xs font-bold text-[#FFC800]">Host Photo:</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const updated = { ...config.hosts, [key]: { ...host, photoUrl: reader.result as string } };
+                              saveConfig({ ...config, hosts: updated }, "Host photo uploaded!");
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="text-xs text-[#A1A1AA]"
+                      />
+                    </div>
+
+                    {/* Host Social Media Links */}
+                    <div className="pt-2 border-t border-[#27272A] flex flex-col gap-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-extrabold text-[#FFC800] uppercase">{host.name}'s Social Links</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newS: SocialLink = { id: `hs-${Date.now()}`, platform: "Instagram", url: "https://instagram.com" };
+                            const updatedHost = { ...host, socials: [...(host.socials || []), newS] };
+                            const updated = { ...config.hosts, [key]: updatedHost };
+                            saveConfig({ ...config, hosts: updated }, "Social link added!");
+                          }}
+                          className="px-2 py-0.5 bg-[#FFC800] text-black text-[10px] font-bold rounded-lg"
+                        >
+                          + Add Social Link
+                        </button>
+                      </div>
+
+                      {(host.socials || []).map((s, sIdx) => (
+                        <div key={s.id} className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            value={s.platform}
+                            onChange={(e) => {
+                              const newSocials = [...host.socials];
+                              newSocials[sIdx].platform = e.target.value;
+                              const updated = { ...config.hosts, [key]: { ...host, socials: newSocials } };
+                              saveConfig({ ...config, hosts: updated }, "Social platform updated!");
+                            }}
+                            className="bg-[#141417] border border-[#27272A] rounded-lg p-1.5 text-xs text-white w-1/3"
+                            placeholder="Platform"
+                          />
+                          <input
+                            type="text"
+                            value={s.url}
+                            onChange={(e) => {
+                              const newSocials = [...host.socials];
+                              newSocials[sIdx].url = e.target.value;
+                              const updated = { ...config.hosts, [key]: { ...host, socials: newSocials } };
+                              saveConfig({ ...config, hosts: updated }, "Social URL updated!");
+                            }}
+                            className="bg-[#141417] border border-[#27272A] rounded-lg p-1.5 text-xs text-white w-full"
+                            placeholder="URL"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newSocials = host.socials.filter((item) => item.id !== s.id);
+                              const updated = { ...config.hosts, [key]: { ...host, socials: newSocials } };
+                              saveConfig({ ...config, hosts: updated }, "Social link deleted!");
+                            }}
+                            className="text-xs text-red-400 font-bold px-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
                   </div>
                 );
               })}
             </div>
 
-            {/* Q&A Dashboard */}
+            {/* Q&A Approval Feed */}
             <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
               <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Fan Q&A Approval Inbox</h2>
               {(config.questions || []).map((q) => (
@@ -741,11 +835,11 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 3: STORIES MANAGER & PROFESSIONAL RICH TEXT EDITOR */}
+        {/* TAB 3: STORIES & RICH TEXT EDITOR */}
         {activeTab === "stories" && (
           <section className="flex flex-col gap-6">
             
-            {/* Published Stories Management Panel */}
+            {/* Manage Published Stories */}
             <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
               <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Manage Published Stories</h2>
               {(config.stories || []).map((story) => (
@@ -831,7 +925,25 @@ export default function MasterAdminCMS() {
                 />
               </div>
 
-              {/* Rich Text Editor Toolbar (H1, H2, H3, Image, Link, Table) */}
+              {/* Story Thumbnail Uploader */}
+              <div className="flex items-center gap-3 bg-[#09090B] border border-[#27272A] p-3 rounded-xl">
+                <span className="text-xs font-bold text-[#FFC800]">Story Thumbnail:</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setThumbnailUrl(reader.result as string);
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="text-xs text-[#A1A1AA]"
+                />
+              </div>
+
+              {/* Rich Text Editor Toolbar */}
               <div className="border border-[#27272A] rounded-2xl overflow-hidden bg-[#09090B]">
                 <div className="flex flex-wrap gap-1 bg-[#141417] p-2 border-b border-[#27272A]">
                   <button type="button" onClick={() => formatText("bold")} className="px-2 py-1 bg-[#09090B] text-xs font-black text-white rounded">B</button>
@@ -886,7 +998,7 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 4: ABOUT TIMELINE & ACHIEVEMENTS */}
+        {/* TAB 4: ABOUT TIMELINE & MILESTONE PHOTO UPLOADER */}
         {activeTab === "about" && (
           <section className="flex flex-col gap-6">
             
@@ -921,7 +1033,7 @@ export default function MasterAdminCMS() {
               </div>
             </div>
 
-            {/* Timeline Milestones with Metadata */}
+            {/* Timeline Milestones with Direct File Upload Button */}
             <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Milestone Timeline Stops</h2>
@@ -945,7 +1057,7 @@ export default function MasterAdminCMS() {
               </div>
 
               {(config.milestones || []).map((ms, idx) => (
-                <div key={ms.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
+                <div key={ms.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
                   <div className="flex justify-between">
                     <span className="text-[10px] font-bold text-[#FFC800]">STOP #{idx + 1}</span>
                     <button
@@ -958,6 +1070,7 @@ export default function MasterAdminCMS() {
                       Delete
                     </button>
                   </div>
+
                   <input
                     type="text"
                     value={ms.title}
@@ -967,7 +1080,31 @@ export default function MasterAdminCMS() {
                       saveConfig({ ...config, milestones: updated }, "Milestone updated!");
                     }}
                     className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                    placeholder="Milestone Title"
                   />
+
+                  {/* 📷 Milestone Photo Uploader Button */}
+                  <div className="flex items-center gap-3 bg-[#141417] border border-[#27272A] p-3 rounded-xl">
+                    <span className="text-xs font-bold text-[#FFC800]">📷 Upload Milestone Photo:</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const updated = [...config.milestones];
+                            updated[idx].imageUrl = reader.result as string;
+                            saveConfig({ ...config, milestones: updated }, "Milestone photo uploaded!");
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="text-xs text-[#A1A1AA]"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="text"
