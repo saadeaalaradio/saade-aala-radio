@@ -1,306 +1,306 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
-export interface HomepageSection {
-  id: "webplayer" | "carousel" | "hosts_photo" | "social_media" | "mma_game" | "stories";
+export interface Milestone {
+  id: string;
+  tag: string;
   title: string;
-  enabled: boolean;
+  description: string;
+  quote?: string;
+  imageUrl: string;
 }
 
-const DEFAULT_SECTIONS: HomepageSection[] = [
-  { id: "webplayer", title: "1. Webplayer (YouTube + Spotify)", enabled: true },
-  { id: "carousel", title: "2. Latest Episode Poster Carousel", enabled: true },
-  { id: "hosts_photo", title: "3. Hosts Photo & Meet The Team", enabled: true },
-  { id: "social_media", title: "4. Social Media Tab", enabled: true },
-  { id: "mma_game", title: "5. MMA Arcade Game", enabled: true },
-  { id: "stories", title: "6. Short Stories Tab", enabled: true },
-];
+export interface AboutConfig {
+  heroTag: string;
+  heroTitle: string;
+  heroDescription: string;
+  stat1Number: string;
+  stat1Label: string;
+  stat2Number: string;
+  stat2Label: string;
+  stat3Number: string;
+  stat3Label: string;
+  stat4Number: string;
+  stat4Label: string;
+  milestones: Milestone[];
+}
 
-export default function HomePage() {
-  const [sections, setSections] = useState<HomepageSection[]>(DEFAULT_SECTIONS);
-  const [activePlayer, setActivePlayer] = useState<"youtube" | "spotify">("youtube");
+const DEFAULT_ABOUT_CONFIG: AboutConfig = {
+  heroTag: "OUR STORY & JOURNEY",
+  heroTitle: "How Three Friends Turned Late-Night Banter Into A Cult Podcast",
+  heroDescription: "No scripts, no filters, just pure Punjabi comedy. Here is the unfiltered story of how Saade Aala Radio evolved from a makeshift room into a full studio production.",
+  stat1Number: "50+", stat1Label: "Episodes Released",
+  stat2Number: "100K+", stat2Label: "Monthly Streams",
+  stat3Number: "3", stat3Label: "Unfiltered Hosts",
+  stat4Number: "100%", stat4Label: "Unscripted Comedy",
+  milestones: [
+    {
+      id: "m-1",
+      tag: "EARLY DAYS",
+      title: "The Late-Night Idea",
+      description: "Harshdeep, Sarabjeet, and Sandeep were sitting together after a long shoot day, telling outrageous personal stories. Sandeep suggested putting a condenser mic on the table and recording without a script.",
+      quote: "Asli comedy script vich nahi, unscripted chaotic moments vich hundi aa. — Harshdeep",
+      imageUrl: "/about/milestone1.png",
+    },
+    {
+      id: "m-2",
+      tag: "EPISODE #1",
+      title: "Dropping Episode 1",
+      description: "Armed with a single USB microphone and zero audio engineering experience, we recorded our first raw episode. Audio levels peaked, but the audience loved the relatable humor.",
+      imageUrl: "/about/milestone2.png",
+    },
+    {
+      id: "m-3",
+      tag: "STUDIO UPGRADE",
+      title: "Moving to a Professional Studio Setup",
+      description: "As our YouTube subscriber base and Spotify streams grew, we moved into a dedicated acoustic studio with multi-camera 4K video recording.",
+      imageUrl: "/about/milestone3.png",
+    },
+    {
+      id: "m-4",
+      tag: "TODAY & BEYOND",
+      title: "Global Community & Interactive Platform",
+      description: "Today, Saade Aala Radio is more than just a podcast. With interactive games, community Q&As, short stories, and live video episodes.",
+      imageUrl: "/about/milestone4.png",
+    },
+  ],
+};
 
-  // Load layout preferences from Admin CMS
+export default function AdminCMS() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<"about" | "stories" | "inbox" | "layout">("about");
+
+  const [aboutConfig, setAboutConfig] = useState<AboutConfig>(DEFAULT_ABOUT_CONFIG);
+  const [saveMessage, setSaveMessage] = useState("");
+
+  // Load Config
   useEffect(() => {
-    const saved = localStorage.getItem("saade_aala_cms_config");
+    const saved = localStorage.getItem("saade_aala_about_config");
     if (saved) {
-      try {
-        const config = JSON.parse(saved);
-        if (config.homepageSections && Array.isArray(config.homepageSections)) {
-          setSections(config.homepageSections);
-        }
-      } catch (e) {
-        console.error("Failed to parse section configuration", e);
-      }
+      try { setAboutConfig(JSON.parse(saved)); } catch (e) { console.error(e); }
     }
   }, []);
 
+  const saveAboutConfig = (updated: AboutConfig) => {
+    setAboutConfig(updated);
+    localStorage.setItem("saade_aala_about_config", JSON.stringify(updated));
+    setSaveMessage("✨ About Us Timeline & Milestones Updated!");
+    setTimeout(() => setSaveMessage(""), 3000);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const updatedMs = [...aboutConfig.milestones];
+        updatedMs[index].imageUrl = reader.result as string;
+        saveAboutConfig({ ...aboutConfig, milestones: updatedMs });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const addMilestone = () => {
+    const newMs: Milestone = {
+      id: `m-${Date.now()}`,
+      tag: "NEW MILESTONE",
+      title: "New Achievement Title",
+      description: "Describe what happened during this stage of the journey...",
+      quote: "",
+      imageUrl: "/logo-placeholder.png",
+    };
+    saveAboutConfig({ ...aboutConfig, milestones: [...aboutConfig.milestones, newMs] });
+  };
+
+  const deleteMilestone = (id: string) => {
+    if (!confirm("Are you sure you want to delete this milestone?")) return;
+    const updated = aboutConfig.milestones.filter((m) => m.id !== id);
+    saveAboutConfig({ ...aboutConfig, milestones: updated });
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === "saadeaala123") setIsAuthenticated(true);
+    else alert("Incorrect passcode!");
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center min-h-screen px-4 bg-[#09090B] text-white">
+        <form onSubmit={handleLogin} className="w-full max-w-[360px] bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4 text-center shadow-2xl">
+          <div className="text-2xl font-black text-[#FFC800]">SAADE AALA CMS</div>
+          <p className="text-xs text-[#A1A1AA]">Enter admin passcode to manage website content.</p>
+          <input
+            type="password"
+            placeholder="Passcode"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-[#09090B] border border-[#27272A] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFC800]"
+          />
+          <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
+            UNLOCK DASHBOARD 🔐
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#09090B] text-[#FAFAFA] font-sans pb-24 md:pb-12 selection:bg-[#FFC800] selection:text-black">
-      
-      {/* 💻 DESKTOP HEADER (Monitors / Laptops) */}
-      <header className="hidden md:block sticky top-0 z-50 backdrop-blur-md bg-[#09090B]/90 border-b border-[#27272A] px-8 py-4">
-        <div className="max-w-[1100px] mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-1.5 no-underline">
-            <span className="text-2xl font-black tracking-tighter text-[#FFC800]">SAADE AALA</span>
-            <span className="text-2xl font-light tracking-widest text-white">RADIO</span>
+    <div className="flex justify-center min-h-screen px-4 py-8 bg-[#09090B] text-[#FAFAFA] font-sans">
+      <main className="w-full max-w-[850px] flex flex-col gap-6">
+        
+        {/* Header */}
+        <header className="flex items-center justify-between py-3 border-b border-[#27272A]">
+          <div>
+            <span className="text-lg font-black text-[#FFC800]">SAADE AALA CMS</span>
+            <span className="text-xs text-[#A1A1AA] block">Master Control Panel</span>
+          </div>
+          <Link href="/about" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800]">
+            ← VIEW ABOUT PAGE
           </Link>
+        </header>
 
-          <nav className="flex items-center gap-6 text-sm font-bold text-[#A1A1AA]">
-            <Link href="/" className="text-[#FFC800]">Home</Link>
-            <Link href="/team" className="hover:text-[#FFC800] transition-colors">Meet The Team</Link>
-            <Link href="/stories" className="hover:text-[#FFC800] transition-colors">Short Stories</Link>
-            <Link href="/game" className="hover:text-[#FFC800] transition-colors text-[#FFC800]">🎮 MMA Arcade</Link>
-            <Link href="/admin" className="px-4 py-2 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-md">
-              ADMIN CMS 🔐
-            </Link>
-          </nav>
+        {saveMessage && (
+          <div className="bg-[#FFC800]/20 border border-[#FFC800] text-[#FFC800] text-xs font-bold p-3 rounded-xl text-center">
+            {saveMessage}
+          </div>
+        )}
+
+        {/* Tab Switcher */}
+        <div className="grid grid-cols-2 bg-[#141417] p-1.5 rounded-2xl border border-[#27272A] text-center">
+          <button
+            onClick={() => setActiveTab("about")}
+            className={`py-2.5 text-xs font-black uppercase rounded-xl ${activeTab === "about" ? "bg-[#FFC800] text-black" : "text-[#A1A1AA]"}`}
+          >
+            📖 About Page & Timeline
+          </button>
+          <Link href="/" className="py-2.5 text-xs font-black uppercase text-[#A1A1AA] flex items-center justify-center">
+            🏠 Back to Site
+          </Link>
         </div>
-      </header>
 
-      {/* 📱 MOBILE HEADER (Phones) */}
-      <header className="md:hidden sticky top-0 z-50 backdrop-blur-md bg-[#09090B]/95 border-b border-[#27272A] px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-1 no-underline">
-          <span className="text-lg font-black text-[#FFC800]">SAADE AALA</span>
-          <span className="text-lg font-light text-white">RADIO</span>
-        </Link>
-        <Link href="/admin" className="px-2.5 py-1 bg-[#FFC800] text-black text-[10px] font-black rounded-lg">
-          CMS 🔐
-        </Link>
-      </header>
-
-      {/* DYNAMIC CONTENT CONTAINER */}
-      <main className="max-w-[1100px] mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col gap-8 md:gap-12">
-
-        {sections.map((section) => {
-          if (!section.enabled) return null;
-
-          switch (section.id) {
+        {/* MANAGING ABOUT PAGE */}
+        {activeTab === "about" && (
+          <div className="flex flex-col gap-6">
             
-            /* 1. WEBPLAYER (YOUTUBE + SPOTIFY) */
-            case "webplayer":
-              return (
-                <section key={section.id} className="bg-[#141417] border border-[#27272A] p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row gap-6 items-center">
-                  <div className="flex-1 flex flex-col gap-3 w-full">
-                    <span className="text-[10px] md:text-xs font-black text-[#FFC800] tracking-widest uppercase">NOW STREAMING</span>
-                    <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">Latest Podcast Episode</h1>
-                    <p className="text-xs md:text-sm text-[#A1A1AA] leading-relaxed">
-                      Join Harshdeep, Sarabjeet, and Sandeep as they dive into raw Punjabi banter, viral stories, and unscripted laughs.
-                    </p>
+            {/* Header / Hero Content */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Page Header Settings</h2>
+              <input
+                type="text"
+                value={aboutConfig.heroTitle}
+                onChange={(e) => saveAboutConfig({ ...aboutConfig, heroTitle: e.target.value })}
+                placeholder="Hero Headline"
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-3 text-xs text-white"
+              />
+              <textarea
+                rows={2}
+                value={aboutConfig.heroDescription}
+                onChange={(e) => saveAboutConfig({ ...aboutConfig, heroDescription: e.target.value })}
+                placeholder="Hero Subtitle"
+                className="bg-[#09090B] border border-[#27272A] rounded-xl p-3 text-xs text-white resize-none"
+              />
+            </div>
 
-                    <div className="flex bg-[#09090B] p-1 rounded-xl border border-[#27272A] self-start mt-2">
+            {/* Milestones Editor */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">
+                  Milestone Timeline ({aboutConfig.milestones.length})
+                </h2>
+                <button
+                  onClick={addMilestone}
+                  className="px-3.5 py-1.5 bg-[#FFC800] text-black text-xs font-extrabold rounded-xl"
+                >
+                  + ADD MILESTONE
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                {aboutConfig.milestones.map((ms, idx) => (
+                  <div key={ms.id} className="bg-[#09090B] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-3 relative">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-[#FFC800]">MILESTONE #{idx + 1}</span>
                       <button
-                        onClick={() => setActivePlayer("youtube")}
-                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                          activePlayer === "youtube" ? "bg-[#FFC800] text-black" : "text-[#A1A1AA]"
-                        }`}
+                        onClick={() => deleteMilestone(ms.id)}
+                        className="text-xs text-red-400 font-bold border border-red-500/30 px-2 py-0.5 rounded-lg bg-red-500/10"
                       >
-                        📹 YouTube
-                      </button>
-                      <button
-                        onClick={() => setActivePlayer("spotify")}
-                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                          activePlayer === "spotify" ? "bg-[#FFC800] text-black" : "text-[#A1A1AA]"
-                        }`}
-                      >
-                        🎧 Spotify
+                        Delete
                       </button>
                     </div>
-                  </div>
 
-                  <div className="w-full md:w-[480px] aspect-video bg-black rounded-xl md:rounded-2xl overflow-hidden border border-[#27272A] shrink-0">
-                    {activePlayer === "youtube" ? (
-                      <iframe
-                        className="w-full h-full"
-                        src="https://www.youtube.com/embed/videoseries?list=PL3oW2tjiIx8m7jU"
-                        title="Saade Aala Radio YouTube Episode"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={ms.tag}
+                        onChange={(e) => {
+                          const updated = [...aboutConfig.milestones];
+                          updated[idx].tag = e.target.value;
+                          saveAboutConfig({ ...aboutConfig, milestones: updated });
+                        }}
+                        placeholder="Tag (e.g. EARLY DAYS)"
+                        className="bg-[#141417] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
                       />
-                    ) : (
-                      <iframe
-                        className="w-full h-full"
-                        src="https://open.spotify.com/embed/show/3voSKp0xDQSbzMNVxf239H"
-                        title="Saade Aala Radio Spotify Episode"
-                        allow="encrypted-media"
+                      <input
+                        type="text"
+                        value={ms.title}
+                        onChange={(e) => {
+                          const updated = [...aboutConfig.milestones];
+                          updated[idx].title = e.target.value;
+                          saveAboutConfig({ ...aboutConfig, milestones: updated });
+                        }}
+                        placeholder="Milestone Title"
+                        className="bg-[#141417] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
                       />
-                    )}
-                  </div>
-                </section>
-              );
-
-            /* 2. POSTER CAROUSEL OF LATEST EPISODES */
-            case "carousel":
-              return (
-                <section key={section.id} className="flex flex-col gap-3">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-base md:text-xl font-black text-white">🔥 Recent Episode Posters</h2>
-                    <span className="text-[10px] md:text-xs text-[#A1A1AA]">Swipe ➔</span>
-                  </div>
-
-                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-[#FFC800]">
-                    {[1, 2, 3, 4, 5].map((item) => (
-                      <div
-                        key={item}
-                        className="min-w-[180px] md:min-w-[220px] bg-[#141417] border border-[#27272A] p-3 rounded-2xl flex flex-col gap-2 shrink-0 hover:border-[#FFC800] transition-colors"
-                      >
-                        <div className="aspect-square w-full rounded-xl bg-[#09090B] border border-[#27272A] flex items-center justify-center text-xs text-[#71717A] font-bold">
-                          POSTER {item} (1:1)
-                        </div>
-                        <span className="text-xs font-black text-white line-clamp-1">Episode #{item} - Sirsa Special</span>
-                        <span className="text-[10px] text-[#FFC800] font-bold">45 mins • Comedy</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              );
-
-            /* 3. STATIC PHOTO OF 3 HOSTS + MEET THE TEAM BUTTON */
-            case "hosts_photo":
-              return (
-                <section key={section.id} className="relative rounded-2xl md:rounded-3xl overflow-hidden border border-[#27272A] bg-[#141417] min-h-[280px] md:min-h-[380px] flex items-end p-6 md:p-10 shadow-2xl">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
-                  <img
-                    src="/hosts-group.png"
-                    alt="Harshdeep, Sarabjeet, and Sandeep"
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
-                  />
-
-                  <div className="relative z-20 flex flex-col items-start gap-2 max-w-[500px]">
-                    <span className="text-[10px] md:text-xs font-extrabold text-[#FFC800] bg-[#FFC800]/20 px-3 py-1 rounded-full border border-[#FFC800]/40">
-                      THE TRIO BEHIND THE MIC
-                    </span>
-                    <h2 className="text-xl md:text-3xl font-black text-white leading-tight">
-                      Meet Harshdeep, Sarabjeet & Sandeep
-                    </h2>
-                    <p className="text-xs md:text-sm text-[#D4D4D8]">
-                      Get to know the personalities, signature quotes, and ask them questions directly.
-                    </p>
-                    <Link
-                      href="/team"
-                      className="mt-2 px-5 py-2.5 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm rounded-xl md:rounded-2xl shadow-xl hover:scale-105 transition-transform"
-                    >
-                      MEET THE TEAM ➔
-                    </Link>
-                  </div>
-                </section>
-              );
-
-            /* 4. SOCIAL MEDIA TAB */
-            case "social_media":
-              return (
-                <section key={section.id} className="bg-[#141417] border border-[#27272A] p-5 md:p-6 rounded-2xl md:rounded-3xl flex flex-col gap-4">
-                  <h2 className="text-base md:text-lg font-black text-[#FFC800]">🌐 Connect With Saade Aala Radio</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                    {[
-                      { name: "YouTube", url: "https://www.youtube.com/@SaadeAalaRadio" },
-                      { name: "Spotify", url: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H" },
-                      { name: "Instagram", url: "https://www.instagram.com/saadeaalaradio" },
-                      { name: "Facebook", url: "https://www.facebook.com/SaadeAalaRadio" },
-                      { name: "LinkedIn", url: "https://www.linkedin.com/showcase/saade-aala-radio" },
-                      { name: "Snapchat", url: "https://www.snapchat.com/add/saadeaalaradio" },
-                    ].map((s) => (
-                      <a
-                        key={s.name}
-                        href={s.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] p-3 rounded-xl text-center text-xs font-bold text-white transition-all hover:scale-105"
-                      >
-                        {s.name}
-                      </a>
-                    ))}
-                  </div>
-                </section>
-              );
-
-            /* 5. MMA ARCADE GAME */
-            case "mma_game":
-              return (
-                <section key={section.id} className="bg-gradient-to-r from-[#141417] via-[#27272A] to-[#141417] border border-[#FFC800]/40 p-6 md:p-8 rounded-2xl md:rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
-                  <div className="flex flex-col gap-2 text-center md:text-left">
-                    <span className="text-[10px] font-black text-[#FFC800] tracking-widest uppercase">MINI-GAME</span>
-                    <h2 className="text-xl md:text-2xl font-black text-white">8-Bit MMA Arcade Challenge</h2>
-                    <p className="text-xs text-[#A1A1AA] max-w-[500px]">
-                      Fight through 3 retro rounds starring Harshdeep, Sarabjeet, and Sandeep with special signature moves!
-                    </p>
-                  </div>
-                  <Link
-                    href="/game"
-                    className="w-full md:w-auto px-8 py-3.5 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm text-center rounded-xl md:rounded-2xl shadow-xl hover:scale-105 transition-transform shrink-0"
-                  >
-                    PLAY NOW 🎮
-                  </Link>
-                </section>
-              );
-
-            /* 6. SHORT STORIES TAB */
-            case "stories":
-              return (
-                <section key={section.id} className="bg-[#141417] border border-[#27272A] p-5 md:p-6 rounded-2xl md:rounded-3xl flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-base md:text-lg font-black text-white">📖 Short Stories & Blogs</h2>
-                    <Link href="/stories" className="text-xs font-bold text-[#FFC800] hover:underline">
-                      View All Stories ➔
-                    </Link>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-xl md:rounded-2xl flex flex-col gap-2">
-                      <span className="text-[10px] font-bold text-[#FFC800]">Harshdeep Singh • 3 min read</span>
-                      <h3 className="text-sm font-black text-white">The Unfiltered Truth Behind The Sirsa Trip</h3>
-                      <p className="text-xs text-[#A1A1AA] line-clamp-2">
-                        We thought it was a 2-hour drive. 14 hours later we were stranded with no phone battery...
-                      </p>
                     </div>
-                    <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-xl md:rounded-2xl flex flex-col gap-2">
-                      <span className="text-[10px] font-bold text-[#FFC800]">Sarabjeet Singh • 2 min read</span>
-                      <h3 className="text-sm font-black text-white">Why Microphones Always Fail At The Best Joke</h3>
-                      <p className="text-xs text-[#A1A1AA] line-clamp-2">
-                        It’s a universal law of comedy podcasting: the punchline will trigger an audio glitch...
-                      </p>
+
+                    <textarea
+                      rows={3}
+                      value={ms.description}
+                      onChange={(e) => {
+                        const updated = [...aboutConfig.milestones];
+                        updated[idx].description = e.target.value;
+                        saveAboutConfig({ ...aboutConfig, milestones: updated });
+                      }}
+                      placeholder="Milestone Description"
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2.5 text-xs text-white resize-none"
+                    />
+
+                    <input
+                      type="text"
+                      value={ms.quote || ""}
+                      onChange={(e) => {
+                        const updated = [...aboutConfig.milestones];
+                        updated[idx].quote = e.target.value;
+                        saveAboutConfig({ ...aboutConfig, milestones: updated });
+                      }}
+                      placeholder="Optional Quote (e.g. 'Quote here' — Author)"
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
+                    />
+
+                    {/* 4:3 Image Upload */}
+                    <div className="flex items-center gap-3 bg-[#141417] border border-[#27272A] p-3 rounded-xl">
+                      <span className="text-[10px] font-bold text-[#A1A1AA]">4:3 Photo:</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, idx)}
+                        className="text-[10px] text-[#A1A1AA] w-full"
+                      />
                     </div>
                   </div>
-                </section>
-              );
+                ))}
+              </div>
+            </div>
 
-            default:
-              return null;
-          }
-        })}
+          </div>
+        )}
 
       </main>
-
-      {/* 📱 MOBILE BOTTOM NAVIGATION BAR (Sticky Phone Dock) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#09090B]/95 backdrop-blur-md border-t border-[#27272A] px-6 py-2.5 flex justify-between items-center text-center shadow-2xl">
-        <Link href="/" className="flex flex-col items-center gap-0.5 text-[#FFC800]">
-          <span className="text-base">🏠</span>
-          <span className="text-[9px] font-bold">Home</span>
-        </Link>
-        <Link href="/team" className="flex flex-col items-center gap-0.5 text-[#A1A1AA]">
-          <span className="text-base">🎙️</span>
-          <span className="text-[9px] font-bold">Team</span>
-        </Link>
-        <Link href="/stories" className="flex flex-col items-center gap-0.5 text-[#A1A1AA]">
-          <span className="text-base">📖</span>
-          <span className="text-[9px] font-bold">Stories</span>
-        </Link>
-        <Link href="/game" className="flex flex-col items-center gap-0.5 text-[#A1A1AA]">
-          <span className="text-base">🎮</span>
-          <span className="text-[9px] font-bold">Arcade</span>
-        </Link>
-      </nav>
-
-      {/* FOOTER */}
-      <footer className="hidden md:block py-8 border-t border-[#27272A] text-center text-xs text-[#A1A1AA]">
-        <p>Saade Aala Radio • Built by <strong className="text-white">Creative Benchers</strong></p>
-      </footer>
-
     </div>
   );
 }
