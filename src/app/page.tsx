@@ -9,6 +9,16 @@ export interface HomepageSection {
   enabled: boolean;
 }
 
+export interface EpisodeBanner {
+  id: string;
+  title: string;
+  duration: string;
+  imageUrl: string;
+  altText: string;
+  metaData: string;
+  streamUrl: string;
+}
+
 const DEFAULT_SECTIONS: HomepageSection[] = [
   { id: "webplayer", title: "1. Webplayer (YouTube + Spotify)", enabled: true },
   { id: "banners", title: "2. 16:9 Episode Banner Slides", enabled: true },
@@ -22,8 +32,13 @@ export default function HomePage() {
   const [sections, setSections] = useState<HomepageSection[]>(DEFAULT_SECTIONS);
   const [activePlayer, setActivePlayer] = useState<"youtube" | "spotify">("youtube");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Dynamic Logos & CMS Data State
+  const [headerLogo, setHeaderLogo] = useState<string>("");
+  const [footerLogo, setFooterLogo] = useState<string>("/logo-placeholder.png");
+  const [banners, setBanners] = useState<EpisodeBanner[]>([]);
 
-  // Load section order and visibility from CMS if available
+  // Load section order, dynamic logos, and banners from CMS
   useEffect(() => {
     const saved = localStorage.getItem("saade_aala_cms_config");
     if (saved) {
@@ -31,6 +46,11 @@ export default function HomePage() {
         const config = JSON.parse(saved);
         if (config.homepageSections && Array.isArray(config.homepageSections)) {
           setSections(config.homepageSections);
+        }
+        if (config.headerLogoUrl) setHeaderLogo(config.headerLogoUrl);
+        if (config.footerLogoUrl) setFooterLogo(config.footerLogoUrl);
+        if (config.episodeBanners && Array.isArray(config.episodeBanners)) {
+          setBanners(config.episodeBanners);
         }
       } catch (e) {
         console.error("Failed to parse section configuration", e);
@@ -42,12 +62,18 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#09090B] text-[#FAFAFA] font-sans selection:bg-[#FFC800] selection:text-black flex flex-col justify-between">
       
       <div>
-        {/* 💻 DESKTOP HEADER */}
+        {/* 💻 DESKTOP HEADER WITH DYNAMIC LOGO */}
         <header className="hidden md:block sticky top-0 z-40 backdrop-blur-md bg-[#09090B]/90 border-b border-[#27272A] px-8 py-4">
           <div className="max-w-[1100px] mx-auto flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-1.5 no-underline">
-              <span className="text-2xl font-black tracking-tighter text-[#FFC800]">SAADE AALA</span>
-              <span className="text-2xl font-light tracking-widest text-white">RADIO</span>
+            <Link href="/" className="flex items-center gap-2 no-underline">
+              {headerLogo ? (
+                <img src={headerLogo} alt="Saade Aala Radio Header Logo" className="h-10 object-contain" />
+              ) : (
+                <>
+                  <span className="text-2xl font-black tracking-tighter text-[#FFC800]">SAADE AALA</span>
+                  <span className="text-2xl font-light tracking-widest text-white">RADIO</span>
+                </>
+              )}
             </Link>
 
             <nav className="flex items-center gap-8 text-sm font-bold text-[#A1A1AA]">
@@ -60,11 +86,17 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* 📱 MOBILE HEADER + HAMBURGER TRIGGER */}
+        {/* 📱 MOBILE HEADER WITH DYNAMIC LOGO */}
         <header className="md:hidden sticky top-0 z-40 backdrop-blur-md bg-[#09090B]/95 border-b border-[#27272A] px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-1 no-underline">
-            <span className="text-lg font-black text-[#FFC800]">SAADE AALA</span>
-            <span className="text-lg font-light text-white">RADIO</span>
+          <Link href="/" className="flex items-center gap-1.5 no-underline">
+            {headerLogo ? (
+              <img src={headerLogo} alt="Saade Aala Radio Logo" className="h-8 object-contain" />
+            ) : (
+              <>
+                <span className="text-lg font-black text-[#FFC800]">SAADE AALA</span>
+                <span className="text-lg font-light text-white">RADIO</span>
+              </>
+            )}
           </Link>
           
           <button
@@ -79,13 +111,7 @@ export default function HomePage() {
         {/* 📱 MOBILE SIDEBAR DRAWER */}
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-50 flex justify-end md:hidden">
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/80 backdrop-blur-xs"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-
-            {/* Slide-out Drawer */}
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-xs" onClick={() => setIsMobileMenuOpen(false)} />
             <div className="relative w-[280px] h-full bg-[#141417] border-l border-[#27272A] p-6 flex flex-col justify-between z-10 shadow-2xl animate-in slide-in-from-right duration-200">
               <div className="flex flex-col gap-6">
                 <div className="flex justify-between items-center border-b border-[#27272A] pb-4">
@@ -102,21 +128,11 @@ export default function HomePage() {
                 </div>
 
                 <nav className="flex flex-col gap-4 text-sm font-bold text-white">
-                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[#FFC800]">
-                    🏠 Home
-                  </Link>
-                  <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
-                    📖 About Us
-                  </Link>
-                  <Link href="/team" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
-                    🎙️ Meet The Team
-                  </Link>
-                  <Link href="/stories" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-[#FFC800]">
-                    📖 Short Stories
-                  </Link>
-                  <Link href="/game" onClick={() => setIsMobileMenuOpen(false)} className="text-[#FFC800]">
-                    🎮 MMA Arcade Game
-                  </Link>
+                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[#FFC800]">🏠 Home</Link>
+                  <Link href="/about" onClick={() => setIsMobileMenuOpen(false)}>📖 About Us</Link>
+                  <Link href="/team" onClick={() => setIsMobileMenuOpen(false)}>🎙️ Meet The Team</Link>
+                  <Link href="/stories" onClick={() => setIsMobileMenuOpen(false)}>📖 Short Stories</Link>
+                  <Link href="/game" onClick={() => setIsMobileMenuOpen(false)} className="text-[#FFC800]">🎮 MMA Arcade Game</Link>
                 </nav>
               </div>
 
@@ -142,7 +158,7 @@ export default function HomePage() {
 
             switch (section.id) {
               
-              /* 1. WEBPLAYER (YOUTUBE + SPOTIFY) */
+              /* 1. WEBPLAYER */
               case "webplayer":
                 return (
                   <section key={section.id} className="bg-[#141417] border border-[#27272A] p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row gap-6 items-center">
@@ -194,7 +210,7 @@ export default function HomePage() {
                   </section>
                 );
 
-              /* 2. 16:9 EPISODE BANNER SLIDES */
+              /* 2. 16:9 DYNAMIC EPISODE BANNER SLIDES */
               case "banners":
                 return (
                   <section key={section.id} className="flex flex-col gap-3">
@@ -203,35 +219,47 @@ export default function HomePage() {
                       <span className="text-[10px] md:text-xs text-[#A1A1AA]">Slide Left/Right ➔</span>
                     </div>
 
-                    {/* Horizontal 16:9 Banner Slider */}
                     <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-[#FFC800]">
-                      {[1, 2, 3, 4, 5].map((item) => (
-                        <div
-                          key={item}
-                          className="w-[280px] md:w-[400px] shrink-0 snap-start bg-[#141417] border border-[#27272A] p-3 rounded-2xl flex flex-col gap-2 hover:border-[#FFC800] transition-colors"
-                        >
-                          <div className="aspect-video w-full rounded-xl bg-[#09090B] border border-[#27272A] flex flex-col items-center justify-center p-4 text-center">
-                            <span className="text-xs font-black text-[#FFC800]">16:9 BANNER SLIDE {item}</span>
-                            <span className="text-[10px] text-[#A1A1AA]">Thumbnail Art Placeholder</span>
+                      {(banners.length > 0 ? banners : [1, 2, 3, 4, 5]).map((item, idx) => {
+                        const isObj = typeof item === "object";
+                        return (
+                          <div
+                            key={isObj ? item.id : idx}
+                            className="w-[280px] md:w-[400px] shrink-0 snap-start bg-[#141417] border border-[#27272A] p-3 rounded-2xl flex flex-col gap-2 hover:border-[#FFC800] transition-colors"
+                          >
+                            <div className="aspect-video w-full rounded-xl bg-[#09090B] border border-[#27272A] overflow-hidden relative flex items-center justify-center">
+                              {isObj && item.imageUrl ? (
+                                <img src={item.imageUrl} alt={item.altText || item.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="flex flex-col items-center justify-center text-center p-4">
+                                  <span className="text-xs font-black text-[#FFC800]">16:9 BANNER SLIDE {idx + 1}</span>
+                                  <span className="text-[10px] text-[#A1A1AA]">Thumbnail Art Placeholder</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex justify-between items-center px-1">
+                              <span className="text-xs font-black text-white line-clamp-1">
+                                {isObj ? item.title : `Episode #${item} - Sirsa Special Roast`}
+                              </span>
+                              <span className="text-[10px] text-[#FFC800] font-bold shrink-0">
+                                {isObj ? item.duration : "45 MINS"}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex justify-between items-center px-1">
-                            <span className="text-xs font-black text-white line-clamp-1">Episode #{item} - Sirsa Special Roast</span>
-                            <span className="text-[10px] text-[#FFC800] font-bold shrink-0">45 MINS</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </section>
                 );
 
-              /* 3. STATIC PHOTO OF 3 HOSTS + MEET THE TEAM BUTTON */
+              /* 3. STATIC PHOTO OF 3 HOSTS */
               case "hosts_photo":
                 return (
                   <section key={section.id} className="relative rounded-2xl md:rounded-3xl overflow-hidden border border-[#27272A] bg-[#141417] min-h-[280px] md:min-h-[380px] flex items-end p-6 md:p-10 shadow-2xl">
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
                     <img
                       src="/hosts-group.png"
-                      alt="Harshdeep, Sarabjeet, and Sandeep sitting together"
+                      alt="Harshdeep, Sarabjeet, and Sandeep"
                       className="absolute inset-0 w-full h-full object-cover object-center"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = "none";
@@ -344,22 +372,21 @@ export default function HomePage() {
         </main>
       </div>
 
-      {/* FINALIZED FOOTER */}
+      {/* FINALIZED FOOTER WITH DYNAMIC CMS 500x500 LOGO */}
       <footer className="mt-12 bg-[#141417] border-t border-[#27272A] py-10 px-6">
         <div className="max-w-[1100px] mx-auto flex flex-col md:flex-row justify-between items-center md:items-start gap-8 text-center md:text-left">
           
           {/* Logo & Info */}
           <div className="flex flex-col items-center md:items-start gap-3">
-            <div className="w-20 h-20 bg-[#09090B] border border-[#27272A] rounded-2xl flex items-center justify-center overflow-hidden">
+            <div className="w-20 h-20 bg-[#09090B] border border-[#27272A] rounded-2xl flex items-center justify-center overflow-hidden relative">
               <img
-                src="/logo-placeholder.png"
+                src={footerLogo}
                 alt="Saade Aala Radio 500x500 Logo"
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = "none";
                 }}
               />
-              <span className="text-[10px] font-extrabold text-[#FFC800] uppercase p-2 text-center">500x500 LOGO</span>
             </div>
             <div>
               <span className="text-base font-black text-[#FFC800]">SAADE AALA RADIO</span>
