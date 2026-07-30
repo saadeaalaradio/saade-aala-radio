@@ -1,491 +1,306 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 
-export interface SocialLink {
-  platform: string;
-  url: string;
-}
-
-export interface HostProfile {
-  id: string;
-  name: string;
-  role: string;
-  photoUrl: string;
-  journey: string;
-  quote: string;
-  socials: SocialLink[];
-}
-
-export interface StoryPost {
-  id: string;
+export interface HomepageSection {
+  id: "webplayer" | "carousel" | "hosts_photo" | "social_media" | "mma_game" | "stories";
   title: string;
-  author: string;
-  date: string;
-  readTime: string;
-  thumbnailUrl: string;
-  summary: string;
-  contentHtml: string;
-  seoTitle: string;
-  seoDescription: string;
-  searchTags: string[];
+  enabled: boolean;
 }
 
-export interface FanQuestion {
-  id: string;
-  hostId: string;
-  fanName: string;
-  question: string;
-  answer: string;
-  timestamp: string;
-  isApproved: boolean;
-}
+const DEFAULT_SECTIONS: HomepageSection[] = [
+  { id: "webplayer", title: "1. Webplayer (YouTube + Spotify)", enabled: true },
+  { id: "carousel", title: "2. Latest Episode Poster Carousel", enabled: true },
+  { id: "hosts_photo", title: "3. Hosts Photo & Meet The Team", enabled: true },
+  { id: "social_media", title: "4. Social Media Tab", enabled: true },
+  { id: "mma_game", title: "5. MMA Arcade Game", enabled: true },
+  { id: "stories", title: "6. Short Stories Tab", enabled: true },
+];
 
-export interface SiteConfig {
-  headerLogoUrl: string;
-  footerLogoUrl: string;
-  mainSocials: SocialLink[];
-  hosts: Record<string, HostProfile>;
-  stories: StoryPost[];
-  questions: FanQuestion[];
-}
+export default function HomePage() {
+  const [sections, setSections] = useState<HomepageSection[]>(DEFAULT_SECTIONS);
+  const [activePlayer, setActivePlayer] = useState<"youtube" | "spotify">("youtube");
 
-const DEFAULT_CONFIG: SiteConfig = {
-  headerLogoUrl: "/logo-placeholder.png",
-  footerLogoUrl: "/logo-placeholder.png",
-  mainSocials: [
-    { platform: "YouTube", url: "https://www.youtube.com/@SaadeAalaRadio" },
-    { platform: "Spotify", url: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H" },
-    { platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" },
-  ],
-  hosts: {
-    harshdeep: {
-      id: "harshdeep",
-      name: "Harshdeep Singh",
-      role: "Lead Anchor & Chaos Director",
-      photoUrl: "/hosts/harshdeep.png",
-      journey: "From running wild production sets to co-founding Saade Aala Radio, Harshdeep brings unfiltered energy.",
-      quote: "Tension nahi leni, story poori sun ke jaani aa!",
-      socials: [{ platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" }],
-    },
-    sarabjeet: {
-      id: "sarabjeet",
-      name: "Sarabjeet Singh",
-      role: "Co-Host & Comeback King",
-      photoUrl: "/hosts/sarabjeet.png",
-      journey: "Sarabjeet is the anchor of reality—until he snaps with hilarious one-liners.",
-      quote: "Ehne gall shuru kiti si, khatam main karunga!",
-      socials: [{ platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" }],
-    },
-    sandeep: {
-      id: "sandeep",
-      name: "Sandeep Singh",
-      role: "Co-Host & Cunning Strategist",
-      photoUrl: "/hosts/sandeep.png",
-      journey: "The quiet genius behind the craziest takes.",
-      quote: "Dimaag thoda ghumaya karo, mazaa fir hi aaunda.",
-      socials: [{ platform: "Instagram", url: "https://www.instagram.com/saadeaalaradio" }],
-    },
-  },
-  stories: [
-    {
-      id: "story-1",
-      title: "The Unfiltered Truth Behind The Sirsa Trip",
-      author: "Harshdeep Singh",
-      date: "JUL 20, 2026",
-      readTime: "3 min read",
-      thumbnailUrl: "/logo-placeholder.png",
-      summary: "We thought it was a 2-hour drive. 14 hours later we were stranded with no battery.",
-      contentHtml: "<p>It all started when Sandeep said 'Short cut pata hai mujhe'...</p>",
-      seoTitle: "Sirsa Trip Story - Saade Aala Radio",
-      seoDescription: "The hilarious behind the scenes story of the Sirsa trip.",
-      searchTags: ["sirsa", "travel", "podcast"],
-    },
-  ],
-  questions: [
-    {
-      id: "q-1",
-      hostId: "harshdeep",
-      fanName: "Aman_Mohali",
-      question: "Harshdeep bhaji, next live episode kadon aavega?",
-      answer: "Agle Friday sharp 8 PM! Tayyar raho!",
-      timestamp: "JUL 28, 2026",
-      isApproved: true,
-    },
-  ],
-};
-
-export default function AdminCMS() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
-  const [activeTab, setActiveTab] = useState<"logos" | "socials" | "hosts" | "editor" | "stories" | "inbox">("editor");
-
-  const [config, setConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
-  const [saveMessage, setSaveMessage] = useState("");
-
-  // Story Editing State
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [editingStoryId, setEditingStoryId] = useState<string | null>(null);
-  const [storyTitle, setStoryTitle] = useState("");
-  const [storyAuthor, setStoryAuthor] = useState("Harshdeep Singh");
-  const [storySummary, setStorySummary] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
-  const [seoTitle, setSeoTitle] = useState("");
-  const [seoDescription, setSeoDescription] = useState("");
-  const [searchTags, setSearchTags] = useState("");
-
+  // Load layout preferences from Admin CMS
   useEffect(() => {
     const saved = localStorage.getItem("saade_aala_cms_config");
     if (saved) {
-      try { setConfig(JSON.parse(saved)); } catch (e) { console.error(e); }
+      try {
+        const config = JSON.parse(saved);
+        if (config.homepageSections && Array.isArray(config.homepageSections)) {
+          setSections(config.homepageSections);
+        }
+      } catch (e) {
+        console.error("Failed to parse section configuration", e);
+      }
     }
   }, []);
 
-  const saveConfig = (updated: SiteConfig, msg: string) => {
-    setConfig(updated);
-    localStorage.setItem("saade_aala_cms_config", JSON.stringify(updated));
-    setSaveMessage(msg);
-    setTimeout(() => setSaveMessage(""), 3000);
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === "saadeaala123") setIsAuthenticated(true);
-    else alert("Incorrect passcode!");
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, cb: (url: string) => void) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => cb(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Story Edit Loader
-  const startEditingStory = (story: StoryPost) => {
-    setEditingStoryId(story.id);
-    setStoryTitle(story.title);
-    setStoryAuthor(story.author);
-    setStorySummary(story.summary);
-    setThumbnailUrl(story.thumbnailUrl);
-    setSeoTitle(story.seoTitle);
-    setSeoDescription(story.seoDescription);
-    setSearchTags(story.searchTags.join(", "));
-    if (editorRef.current) editorRef.current.innerHTML = story.contentHtml;
-    setActiveTab("editor");
-  };
-
-  const handleSaveOrPublishStory = (e: React.FormEvent) => {
-    e.preventDefault();
-    const contentHtml = editorRef.current?.innerHTML || "";
-    if (!storyTitle || !contentHtml) return alert("Title and content required.");
-
-    let updatedStories = [...config.stories];
-
-    if (editingStoryId) {
-      // Edit existing story
-      updatedStories = updatedStories.map((s) =>
-        s.id === editingStoryId
-          ? {
-              ...s,
-              title: storyTitle,
-              author: storyAuthor,
-              summary: storySummary,
-              thumbnailUrl,
-              contentHtml,
-              seoTitle,
-              seoDescription,
-              searchTags: searchTags.split(",").map((t) => t.trim()).filter(Boolean),
-            }
-          : s
-      );
-    } else {
-      // Create new story
-      const newPost: StoryPost = {
-        id: `story-${Date.now()}`,
-        title: storyTitle,
-        author: storyAuthor,
-        date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-        readTime: `${Math.max(1, Math.ceil(contentHtml.length / 500))} min read`,
-        thumbnailUrl: thumbnailUrl || "/logo-placeholder.png",
-        summary: storySummary || storyTitle,
-        contentHtml,
-        seoTitle: seoTitle || storyTitle,
-        seoDescription: seoDescription || storySummary,
-        searchTags: searchTags.split(",").map((t) => t.trim()).filter(Boolean),
-      };
-      updatedStories.unshift(newPost);
-    }
-
-    saveConfig({ ...config, stories: updatedStories }, editingStoryId ? "✨ Story updated successfully!" : "🚀 Story published!");
-    
-    // Reset Form
-    setEditingStoryId(null);
-    setStoryTitle("");
-    setStorySummary("");
-    setThumbnailUrl("");
-    setSeoTitle("");
-    setSeoDescription("");
-    setSearchTags("");
-    if (editorRef.current) editorRef.current.innerHTML = "";
-  };
-
-  const deleteStory = (id: string) => {
-    if (!confirm("Are you sure you want to delete this story?")) return;
-    const updated = config.stories.filter((s) => s.id !== id);
-    saveConfig({ ...config, stories: updated }, "🗑️ Story deleted.");
-  };
-
-  // Q&A Answer & Approval
-  const handleAnswerQuestion = (qId: string, answerText: string) => {
-    const updatedQuestions = config.questions.map((q) =>
-      q.id === qId ? { ...q, answer: answerText } : q
-    );
-    saveConfig({ ...config, questions: updatedQuestions }, "💬 Host reply saved!");
-  };
-
-  const toggleQuestionApproval = (qId: string) => {
-    const updatedQuestions = config.questions.map((q) =>
-      q.id === qId ? { ...q, isApproved: !q.isApproved } : q
-    );
-    saveConfig({ ...config, questions: updatedQuestions }, "Status updated!");
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex justify-center items-center min-h-screen px-4 bg-[#09090B] text-white">
-        <form onSubmit={handleLogin} className="w-full max-w-[360px] bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4 text-center shadow-2xl">
-          <div className="text-2xl font-black text-[#FFC800]">SAADE AALA CMS</div>
-          <p className="text-xs text-[#A1A1AA]">Enter admin passcode to manage website content.</p>
-          <input
-            type="password"
-            placeholder="Passcode"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[#09090B] border border-[#27272A] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFC800]"
-          />
-          <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
-            UNLOCK DASHBOARD 🔐
-          </button>
-        </form>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex justify-center min-h-screen px-4 py-8 bg-[#09090B] text-[#FAFAFA] font-sans">
-      <main className="w-full max-w-[800px] flex flex-col gap-6">
-        
-        {/* Header */}
-        <header className="flex items-center justify-between py-3 border-b border-[#27272A]">
-          <div>
-            <span className="text-lg font-black text-[#FFC800]">SAADE AALA CMS</span>
-            <span className="text-xs text-[#A1A1AA] block">Master Control Panel</span>
-          </div>
-          <Link href="/" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800]">
-            ← VIEW LIVE SITE
+    <div className="min-h-screen bg-[#09090B] text-[#FAFAFA] font-sans pb-24 md:pb-12 selection:bg-[#FFC800] selection:text-black">
+      
+      {/* 💻 DESKTOP HEADER (Monitors / Laptops) */}
+      <header className="hidden md:block sticky top-0 z-50 backdrop-blur-md bg-[#09090B]/90 border-b border-[#27272A] px-8 py-4">
+        <div className="max-w-[1100px] mx-auto flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-1.5 no-underline">
+            <span className="text-2xl font-black tracking-tighter text-[#FFC800]">SAADE AALA</span>
+            <span className="text-2xl font-light tracking-widest text-white">RADIO</span>
           </Link>
-        </header>
 
-        {saveMessage && (
-          <div className="bg-[#FFC800]/20 border border-[#FFC800] text-[#FFC800] text-xs font-bold p-3 rounded-xl text-center">
-            {saveMessage}
-          </div>
-        )}
-
-        {/* Tab Navigation */}
-        <div className="grid grid-cols-6 gap-1 bg-[#141417] p-1.5 rounded-2xl border border-[#27272A] text-center">
-          {[
-            { id: "editor", label: "✍️ Write Story" },
-            { id: "stories", label: "📚 Manage Stories" },
-            { id: "inbox", label: "💬 Fan Q&A Inbox" },
-            { id: "hosts", label: "🎙️ Hosts" },
-            { id: "logos", label: "🖼️ Logos" },
-            { id: "socials", label: "🌐 Links" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`py-2.5 text-[11px] font-extrabold uppercase rounded-xl transition-all ${
-                activeTab === tab.id ? "bg-[#FFC800] text-black shadow-md" : "text-[#A1A1AA] hover:text-white"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          <nav className="flex items-center gap-6 text-sm font-bold text-[#A1A1AA]">
+            <Link href="/" className="text-[#FFC800]">Home</Link>
+            <Link href="/team" className="hover:text-[#FFC800] transition-colors">Meet The Team</Link>
+            <Link href="/stories" className="hover:text-[#FFC800] transition-colors">Short Stories</Link>
+            <Link href="/game" className="hover:text-[#FFC800] transition-colors text-[#FFC800]">🎮 MMA Arcade</Link>
+            <Link href="/admin" className="px-4 py-2 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-md">
+              ADMIN CMS 🔐
+            </Link>
+          </nav>
         </div>
+      </header>
 
-        {/* TAB: WRITE & EDIT STORY */}
-        {activeTab === "editor" && (
-          <form onSubmit={handleSaveOrPublishStory} className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4 shadow-xl">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">
-                {editingStoryId ? "✏️ Edit Existing Story" : "✍️ Write New Story"}
-              </h2>
-              {editingStoryId && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingStoryId(null);
-                    setStoryTitle("");
-                    setStorySummary("");
-                    if (editorRef.current) editorRef.current.innerHTML = "";
-                  }}
-                  className="text-xs text-red-400 underline font-bold"
-                >
-                  Cancel Edit
-                </button>
-              )}
-            </div>
+      {/* 📱 MOBILE HEADER (Phones) */}
+      <header className="md:hidden sticky top-0 z-50 backdrop-blur-md bg-[#09090B]/95 border-b border-[#27272A] px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-1 no-underline">
+          <span className="text-lg font-black text-[#FFC800]">SAADE AALA</span>
+          <span className="text-lg font-light text-white">RADIO</span>
+        </Link>
+        <Link href="/admin" className="px-2.5 py-1 bg-[#FFC800] text-black text-[10px] font-black rounded-lg">
+          CMS 🔐
+        </Link>
+      </header>
 
-            <input
-              type="text"
-              required
-              placeholder="Story Title"
-              value={storyTitle}
-              onChange={(e) => setStoryTitle(e.target.value)}
-              className="bg-[#09090B] border border-[#27272A] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-[#FFC800]"
-            />
+      {/* DYNAMIC CONTENT CONTAINER */}
+      <main className="max-w-[1100px] mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col gap-8 md:gap-12">
 
-            <div className="flex gap-3">
-              <select
-                value={storyAuthor}
-                onChange={(e) => setStoryAuthor(e.target.value)}
-                className="w-1/2 bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
-              >
-                <option value="Harshdeep Singh">Harshdeep Singh</option>
-                <option value="Sarabjeet Singh">Sarabjeet Singh</option>
-                <option value="Sandeep Singh">Sandeep Singh</option>
-              </select>
+        {sections.map((section) => {
+          if (!section.enabled) return null;
 
-              <div className="w-1/2 flex items-center gap-2 bg-[#09090B] border border-[#27272A] px-3 py-2 rounded-xl">
-                <span className="text-[10px] text-[#A1A1AA]">Thumbnail:</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, (url) => setThumbnailUrl(url))}
-                  className="text-[10px] text-[#A1A1AA] w-full"
-                />
-              </div>
-            </div>
-
-            <input
-              type="text"
-              placeholder="Short Summary / Teaser"
-              value={storySummary}
-              onChange={(e) => setStorySummary(e.target.value)}
-              className="bg-[#09090B] border border-[#27272A] rounded-xl px-4 py-2.5 text-xs text-white outline-none"
-            />
-
-            {/* WYSIWYG Content Area */}
-            <div
-              ref={editorRef}
-              contentEditable
-              className="min-h-[200px] bg-[#09090B] border border-[#27272A] rounded-2xl p-4 text-xs text-white focus:outline-none focus:border-[#FFC800] overflow-y-auto"
-            />
-
-            <div className="flex flex-col gap-2 pt-3 border-t border-[#27272A]">
-              <span className="text-[10px] font-extrabold text-[#FFC800] uppercase">🔍 SEO & Search Meta Tags</span>
-              <input
-                type="text"
-                placeholder="Search Tags (comma separated)"
-                value={searchTags}
-                onChange={(e) => setSearchTags(e.target.value)}
-                className="bg-[#09090B] border border-[#27272A] rounded-xl px-3 py-2 text-xs text-white"
-              />
-            </div>
-
-            <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl active:scale-95 transition-all">
-              {editingStoryId ? "UPDATE STORY 💾" : "PUBLISH STORY 🚀"}
-            </button>
-          </form>
-        )}
-
-        {/* TAB: MANAGE PUBLISHED STORIES */}
-        {activeTab === "stories" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
-            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Published Short Stories ({config.stories.length})</h2>
-            <div className="flex flex-col gap-3">
-              {config.stories.map((story) => (
-                <div key={story.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex justify-between items-center">
-                  <div className="flex flex-col gap-1 pr-4">
-                    <span className="text-[10px] text-[#FFC800] font-bold">{story.author} • {story.date}</span>
-                    <h3 className="text-sm font-black text-white">{story.title}</h3>
-                    <p className="text-xs text-[#A1A1AA] line-clamp-1">{story.summary}</p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => startEditingStory(story)}
-                      className="px-3 py-1.5 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => deleteStory(story.id)}
-                      className="px-3 py-1.5 bg-red-500/20 text-red-400 text-xs font-bold rounded-xl border border-red-500/30"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* TAB: FAN Q&A INBOX */}
-        {activeTab === "inbox" && (
-          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
-            <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Fan Question Inbox ({config.questions.length})</h2>
+          switch (section.id) {
             
-            <div className="flex flex-col gap-4">
-              {config.questions.map((q) => (
-                <div key={q.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-[#FFC800]">👤 {q.fanName} <span className="text-[#A1A1AA] font-normal">asked {config.hosts[q.hostId]?.name || q.hostId}</span></span>
-                    <span className="text-[10px] text-[#71717A]">{q.timestamp}</span>
+            /* 1. WEBPLAYER (YOUTUBE + SPOTIFY) */
+            case "webplayer":
+              return (
+                <section key={section.id} className="bg-[#141417] border border-[#27272A] p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row gap-6 items-center">
+                  <div className="flex-1 flex flex-col gap-3 w-full">
+                    <span className="text-[10px] md:text-xs font-black text-[#FFC800] tracking-widest uppercase">NOW STREAMING</span>
+                    <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">Latest Podcast Episode</h1>
+                    <p className="text-xs md:text-sm text-[#A1A1AA] leading-relaxed">
+                      Join Harshdeep, Sarabjeet, and Sandeep as they dive into raw Punjabi banter, viral stories, and unscripted laughs.
+                    </p>
+
+                    <div className="flex bg-[#09090B] p-1 rounded-xl border border-[#27272A] self-start mt-2">
+                      <button
+                        onClick={() => setActivePlayer("youtube")}
+                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          activePlayer === "youtube" ? "bg-[#FFC800] text-black" : "text-[#A1A1AA]"
+                        }`}
+                      >
+                        📹 YouTube
+                      </button>
+                      <button
+                        onClick={() => setActivePlayer("spotify")}
+                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                          activePlayer === "spotify" ? "bg-[#FFC800] text-black" : "text-[#A1A1AA]"
+                        }`}
+                      >
+                        🎧 Spotify
+                      </button>
+                    </div>
                   </div>
 
-                  <p className="text-xs text-white font-medium bg-[#141417] p-3 rounded-xl border border-[#27272A]">
-                    "{q.question}"
-                  </p>
+                  <div className="w-full md:w-[480px] aspect-video bg-black rounded-xl md:rounded-2xl overflow-hidden border border-[#27272A] shrink-0">
+                    {activePlayer === "youtube" ? (
+                      <iframe
+                        className="w-full h-full"
+                        src="https://www.youtube.com/embed/videoseries?list=PL3oW2tjiIx8m7jU"
+                        title="Saade Aala Radio YouTube Episode"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <iframe
+                        className="w-full h-full"
+                        src="https://open.spotify.com/embed/show/3voSKp0xDQSbzMNVxf239H"
+                        title="Saade Aala Radio Spotify Episode"
+                        allow="encrypted-media"
+                      />
+                    )}
+                  </div>
+                </section>
+              );
 
-                  {/* Host Reply Box */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-[#A1A1AA]">Host Reply:</label>
-                    <textarea
-                      rows={2}
-                      defaultValue={q.answer}
-                      onBlur={(e) => handleAnswerQuestion(q.id, e.target.value)}
-                      placeholder="Write host response..."
-                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2.5 text-xs text-white outline-none focus:border-[#FFC800] resize-none"
-                    />
+            /* 2. POSTER CAROUSEL OF LATEST EPISODES */
+            case "carousel":
+              return (
+                <section key={section.id} className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-base md:text-xl font-black text-white">🔥 Recent Episode Posters</h2>
+                    <span className="text-[10px] md:text-xs text-[#A1A1AA]">Swipe ➔</span>
                   </div>
 
-                  {/* Publish Switch */}
-                  <div className="flex justify-between items-center pt-2 border-t border-[#27272A]">
-                    <span className="text-[10px] text-[#A1A1AA]">
-                      Status: <strong className={q.isApproved ? "text-green-400" : "text-yellow-400"}>{q.isApproved ? "Visible on Team Page" : "Hidden"}</strong>
+                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-[#FFC800]">
+                    {[1, 2, 3, 4, 5].map((item) => (
+                      <div
+                        key={item}
+                        className="min-w-[180px] md:min-w-[220px] bg-[#141417] border border-[#27272A] p-3 rounded-2xl flex flex-col gap-2 shrink-0 hover:border-[#FFC800] transition-colors"
+                      >
+                        <div className="aspect-square w-full rounded-xl bg-[#09090B] border border-[#27272A] flex items-center justify-center text-xs text-[#71717A] font-bold">
+                          POSTER {item} (1:1)
+                        </div>
+                        <span className="text-xs font-black text-white line-clamp-1">Episode #{item} - Sirsa Special</span>
+                        <span className="text-[10px] text-[#FFC800] font-bold">45 mins • Comedy</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+
+            /* 3. STATIC PHOTO OF 3 HOSTS + MEET THE TEAM BUTTON */
+            case "hosts_photo":
+              return (
+                <section key={section.id} className="relative rounded-2xl md:rounded-3xl overflow-hidden border border-[#27272A] bg-[#141417] min-h-[280px] md:min-h-[380px] flex items-end p-6 md:p-10 shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
+                  <img
+                    src="/hosts-group.png"
+                    alt="Harshdeep, Sarabjeet, and Sandeep"
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+
+                  <div className="relative z-20 flex flex-col items-start gap-2 max-w-[500px]">
+                    <span className="text-[10px] md:text-xs font-extrabold text-[#FFC800] bg-[#FFC800]/20 px-3 py-1 rounded-full border border-[#FFC800]/40">
+                      THE TRIO BEHIND THE MIC
                     </span>
-                    <button
-                      onClick={() => toggleQuestionApproval(q.id)}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold ${
-                        q.isApproved ? "bg-green-500/20 text-green-400 border border-green-500/30" : "bg-[#FFC800] text-black"
-                      }`}
+                    <h2 className="text-xl md:text-3xl font-black text-white leading-tight">
+                      Meet Harshdeep, Sarabjeet & Sandeep
+                    </h2>
+                    <p className="text-xs md:text-sm text-[#D4D4D8]">
+                      Get to know the personalities, signature quotes, and ask them questions directly.
+                    </p>
+                    <Link
+                      href="/team"
+                      className="mt-2 px-5 py-2.5 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm rounded-xl md:rounded-2xl shadow-xl hover:scale-105 transition-transform"
                     >
-                      {q.isApproved ? "Hide Question" : "Approve & Publish ➔"}
-                    </button>
+                      MEET THE TEAM ➔
+                    </Link>
                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+                </section>
+              );
+
+            /* 4. SOCIAL MEDIA TAB */
+            case "social_media":
+              return (
+                <section key={section.id} className="bg-[#141417] border border-[#27272A] p-5 md:p-6 rounded-2xl md:rounded-3xl flex flex-col gap-4">
+                  <h2 className="text-base md:text-lg font-black text-[#FFC800]">🌐 Connect With Saade Aala Radio</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    {[
+                      { name: "YouTube", url: "https://www.youtube.com/@SaadeAalaRadio" },
+                      { name: "Spotify", url: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H" },
+                      { name: "Instagram", url: "https://www.instagram.com/saadeaalaradio" },
+                      { name: "Facebook", url: "https://www.facebook.com/SaadeAalaRadio" },
+                      { name: "LinkedIn", url: "https://www.linkedin.com/showcase/saade-aala-radio" },
+                      { name: "Snapchat", url: "https://www.snapchat.com/add/saadeaalaradio" },
+                    ].map((s) => (
+                      <a
+                        key={s.name}
+                        href={s.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-[#09090B] border border-[#27272A] hover:border-[#FFC800] p-3 rounded-xl text-center text-xs font-bold text-white transition-all hover:scale-105"
+                      >
+                        {s.name}
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              );
+
+            /* 5. MMA ARCADE GAME */
+            case "mma_game":
+              return (
+                <section key={section.id} className="bg-gradient-to-r from-[#141417] via-[#27272A] to-[#141417] border border-[#FFC800]/40 p-6 md:p-8 rounded-2xl md:rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+                  <div className="flex flex-col gap-2 text-center md:text-left">
+                    <span className="text-[10px] font-black text-[#FFC800] tracking-widest uppercase">MINI-GAME</span>
+                    <h2 className="text-xl md:text-2xl font-black text-white">8-Bit MMA Arcade Challenge</h2>
+                    <p className="text-xs text-[#A1A1AA] max-w-[500px]">
+                      Fight through 3 retro rounds starring Harshdeep, Sarabjeet, and Sandeep with special signature moves!
+                    </p>
+                  </div>
+                  <Link
+                    href="/game"
+                    className="w-full md:w-auto px-8 py-3.5 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm text-center rounded-xl md:rounded-2xl shadow-xl hover:scale-105 transition-transform shrink-0"
+                  >
+                    PLAY NOW 🎮
+                  </Link>
+                </section>
+              );
+
+            /* 6. SHORT STORIES TAB */
+            case "stories":
+              return (
+                <section key={section.id} className="bg-[#141417] border border-[#27272A] p-5 md:p-6 rounded-2xl md:rounded-3xl flex flex-col gap-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-base md:text-lg font-black text-white">📖 Short Stories & Blogs</h2>
+                    <Link href="/stories" className="text-xs font-bold text-[#FFC800] hover:underline">
+                      View All Stories ➔
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-xl md:rounded-2xl flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-[#FFC800]">Harshdeep Singh • 3 min read</span>
+                      <h3 className="text-sm font-black text-white">The Unfiltered Truth Behind The Sirsa Trip</h3>
+                      <p className="text-xs text-[#A1A1AA] line-clamp-2">
+                        We thought it was a 2-hour drive. 14 hours later we were stranded with no phone battery...
+                      </p>
+                    </div>
+                    <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-xl md:rounded-2xl flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-[#FFC800]">Sarabjeet Singh • 2 min read</span>
+                      <h3 className="text-sm font-black text-white">Why Microphones Always Fail At The Best Joke</h3>
+                      <p className="text-xs text-[#A1A1AA] line-clamp-2">
+                        It’s a universal law of comedy podcasting: the punchline will trigger an audio glitch...
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              );
+
+            default:
+              return null;
+          }
+        })}
 
       </main>
+
+      {/* 📱 MOBILE BOTTOM NAVIGATION BAR (Sticky Phone Dock) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#09090B]/95 backdrop-blur-md border-t border-[#27272A] px-6 py-2.5 flex justify-between items-center text-center shadow-2xl">
+        <Link href="/" className="flex flex-col items-center gap-0.5 text-[#FFC800]">
+          <span className="text-base">🏠</span>
+          <span className="text-[9px] font-bold">Home</span>
+        </Link>
+        <Link href="/team" className="flex flex-col items-center gap-0.5 text-[#A1A1AA]">
+          <span className="text-base">🎙️</span>
+          <span className="text-[9px] font-bold">Team</span>
+        </Link>
+        <Link href="/stories" className="flex flex-col items-center gap-0.5 text-[#A1A1AA]">
+          <span className="text-base">📖</span>
+          <span className="text-[9px] font-bold">Stories</span>
+        </Link>
+        <Link href="/game" className="flex flex-col items-center gap-0.5 text-[#A1A1AA]">
+          <span className="text-base">🎮</span>
+          <span className="text-[9px] font-bold">Arcade</span>
+        </Link>
+      </nav>
+
+      {/* FOOTER */}
+      <footer className="hidden md:block py-8 border-t border-[#27272A] text-center text-xs text-[#A1A1AA]">
+        <p>Saade Aala Radio • Built by <strong className="text-white">Creative Benchers</strong></p>
+      </footer>
+
     </div>
   );
 }
