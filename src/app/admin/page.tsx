@@ -201,7 +201,7 @@ export default function MasterAdminCMS() {
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const [activeTab, setActiveTab] = useState<"home" | "team" | "stories" | "about" | "seo">("home");
+  const [activeTab, setActiveTab] = useState<"logos" | "home" | "team" | "stories" | "about" | "seo">("logos");
 
   const [config, setConfig] = useState<MasterSiteConfig>(DEFAULT_CONFIG);
   const [saveMessage, setSaveMessage] = useState("");
@@ -409,8 +409,9 @@ export default function MasterAdminCMS() {
         )}
 
         {/* Master Navigation */}
-        <div className="grid grid-cols-5 gap-1 bg-[#141417] p-1.5 rounded-2xl border border-[#27272A] text-center">
+        <div className="grid grid-cols-6 gap-1 bg-[#141417] p-1.5 rounded-2xl border border-[#27272A] text-center">
           {[
+            { id: "logos", label: "🎨 Logos" },
             { id: "home", label: "🏠 Homepage" },
             { id: "team", label: "🎙️ Team Page" },
             { id: "stories", label: "✍️ Stories & Editor" },
@@ -428,6 +429,84 @@ export default function MasterAdminCMS() {
             </button>
           ))}
         </div>
+
+        {/* TAB 0: BRANDING & LOGOS UPLOAD PANEL */}
+        {activeTab === "logos" && (
+          <section className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-6">
+            <div>
+              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Site Brand Logos</h2>
+              <p className="text-xs text-[#A1A1AA] mt-1">
+                Upload custom images for your website header and 500x500 footer logo.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Header Logo File Picker */}
+              <div className="bg-[#09090B] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-4">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">Header Logo</span>
+                <div className="h-24 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-3 relative overflow-hidden">
+                  {config.headerLogoUrl ? (
+                    <img src={config.headerLogoUrl} alt="Header Logo Preview" className="max-h-full object-contain" />
+                  ) : (
+                    <span className="text-xs text-[#71717A] font-bold">NO HEADER LOGO UPLOADED</span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold text-[#FFC800]">Select New Header Logo File:</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          saveConfig({ ...config, headerLogoUrl: reader.result as string }, "✨ Header logo updated!");
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="text-xs text-[#A1A1AA] file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FFC800] file:text-black hover:file:cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* 500x500 Footer Logo File Picker */}
+              <div className="bg-[#09090B] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-4">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">Footer Logo (500x500 PNG)</span>
+                <div className="h-24 bg-[#141417] border border-[#27272A] rounded-xl flex items-center justify-center p-3 relative overflow-hidden">
+                  {config.footerLogoUrl ? (
+                    <img src={config.footerLogoUrl} alt="Footer Logo Preview" className="max-h-full object-contain" />
+                  ) : (
+                    <span className="text-xs text-[#71717A] font-bold">NO FOOTER LOGO UPLOADED</span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold text-[#FFC800]">Select 500x500 Footer Image File:</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          saveConfig({ ...config, footerLogoUrl: reader.result as string }, "✨ 500x500 Footer logo updated!");
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="text-xs text-[#A1A1AA] file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FFC800] file:text-black hover:file:cursor-pointer"
+                  />
+                </div>
+              </div>
+
+            </div>
+          </section>
+        )}
 
         {/* TAB 1: HOMEPAGE MANAGER */}
         {activeTab === "home" && (
