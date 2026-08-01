@@ -92,6 +92,7 @@ export default function TeamPage() {
   const [hosts, setHosts] = useState<Record<string, HostProfile>>(DEFAULT_HOSTS);
   const [questions, setQuestions] = useState<FanQuestion[]>(DEFAULT_QUESTIONS);
   const [selectedMobileHost, setSelectedMobileHost] = useState<string>("harshdeep");
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   // Q&A Modal State
   const [activeAskHost, setActiveAskHost] = useState<string | null>(null);
@@ -114,6 +115,10 @@ export default function TeamPage() {
       }
     }
   }, []);
+
+  const handleImageError = (hostId: string) => {
+    setFailedImages((prev) => ({ ...prev, [hostId]: true }));
+  };
 
   const handleQuestionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,19 +188,19 @@ export default function TeamPage() {
         <div className="bg-[#141417] border border-[#27272A] p-5 rounded-3xl flex flex-col gap-4 shadow-xl">
           {/* Photo Container */}
           <div className="aspect-square w-full bg-[#09090B] border border-[#27272A] rounded-2xl overflow-hidden relative flex items-center justify-center">
-            <img
-              src={activeHostObj.photoUrl}
-              alt={activeHostObj.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLElement).style.display = "none";
-              }}
-            />
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-              <span className="text-3xl mb-1">🎙️</span>
-              <span className="text-xs font-black text-[#FFC800] uppercase">{activeHostObj.name}</span>
-              <span className="text-[10px] text-[#71717A]">PHOTO PLACEHOLDER</span>
-            </div>
+            {!failedImages[activeHostObj.id] ? (
+              <img
+                src={activeHostObj.photoUrl}
+                alt={activeHostObj.name}
+                className="w-full h-full object-cover"
+                onError={() => handleImageError(activeHostObj.id)}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center p-4">
+                <span className="text-4xl mb-1">🎙️</span>
+                <span className="text-xs font-black text-[#A1A1AA]">PHOTO PLACEHOLDER</span>
+              </div>
+            )}
           </div>
 
           <div>
@@ -224,6 +229,8 @@ export default function TeamPage() {
       <div className="hidden md:grid max-w-[1100px] mx-auto px-8 pt-10 grid-cols-3 gap-6">
         {Object.keys(hosts).map((key) => {
           const host = hosts[key];
+          const isFailed = failedImages[host.id];
+
           return (
             <div
               key={key}
@@ -232,19 +239,19 @@ export default function TeamPage() {
               <div className="flex flex-col gap-4">
                 {/* Photo Container */}
                 <div className="aspect-square w-full bg-[#09090B] border border-[#27272A] group-hover:border-[#FFC800]/40 rounded-2xl overflow-hidden relative flex items-center justify-center transition-colors">
-                  <img
-                    src={host.photoUrl}
-                    alt={host.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
-                  />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                    <span className="text-4xl mb-1">🎙️</span>
-                    <span className="text-xs font-black text-[#FFC800] uppercase">{host.name}</span>
-                    <span className="text-[10px] text-[#71717A]">PHOTO PLACEHOLDER</span>
-                  </div>
+                  {!isFailed ? (
+                    <img
+                      src={host.photoUrl}
+                      alt={host.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={() => handleImageError(host.id)}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center p-4">
+                      <span className="text-4xl mb-1">🎙️</span>
+                      <span className="text-xs font-black text-[#A1A1AA]">PHOTO PLACEHOLDER</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
