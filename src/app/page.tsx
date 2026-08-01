@@ -241,36 +241,50 @@ export default function HomePage() {
               );
             }
 
-            /* 3. STATIC PHOTO OF 3 HOSTS */
+            /* 3. HOSTS PHOTO WITH SEAMLESS NETFLIX-STYLE FADE */
             case "hosts_photo":
               return (
                 <section
                   key={section.id}
-                  className="relative rounded-2xl md:rounded-3xl overflow-hidden border border-[#27272A] bg-[#141417] min-h-[280px] md:min-h-[380px] flex items-end p-6 md:p-10 shadow-2xl"
+                  className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-[#09090B] border border-[#27272A] min-h-[340px] md:min-h-[440px] flex items-end p-6 md:p-10 shadow-2xl group"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10" />
-                  <img
-                    src="/hosts-group.png"
-                    alt="Harshdeep, Sarabjeet, and Sandeep"
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
-                  />
+                  {/* Background Image Container with Gradient Fade Overlay */}
+                  <div className="absolute inset-0 z-0 overflow-hidden">
+                    <img
+                      src="/hosts-group.png"
+                      alt="Harshdeep, Sarabjeet, and Sandeep - Saade Aala Radio"
+                      className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      style={{
+                        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%)",
+                        maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%)",
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
 
-                  <div className="relative z-20 flex flex-col items-start gap-2 max-w-[500px]">
-                    <span className="text-[10px] md:text-xs font-extrabold text-[#FFC800] bg-[#FFC800]/20 px-3 py-1 rounded-full border border-[#FFC800]/40">
+                    {/* Ambient Dark Gradients to soften top, bottom, and side edges */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#09090B]/90 via-transparent to-[#09090B]/90" />
+                  </div>
+
+                  {/* Foreground Content */}
+                  <div className="relative z-10 flex flex-col items-start gap-3 max-w-[550px]">
+                    <span className="text-[10px] md:text-xs font-black text-[#FFC800] bg-[#FFC800]/10 px-3.5 py-1 rounded-full border border-[#FFC800]/30 tracking-widest uppercase">
                       THE TRIO BEHIND THE MIC
                     </span>
-                    <h2 className="text-xl md:text-3xl font-black text-white leading-tight">
+
+                    <h2 className="text-2xl md:text-4xl font-black text-white leading-tight drop-shadow-lg">
                       Meet Harshdeep, Sarabjeet & Sandeep
                     </h2>
-                    <p className="text-xs md:text-sm text-[#D4D4D8]">
-                      Get to know the personalities, signature quotes, and ask them questions directly.
+
+                    <p className="text-xs md:text-sm text-[#D4D4D8] leading-relaxed drop-shadow">
+                      Get to know the personalities, signature quotes, and ask them questions directly in our community Q&A.
                     </p>
+
                     <Link
                       href="/team"
-                      className="mt-2 px-5 py-2.5 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm rounded-xl md:rounded-2xl shadow-xl hover:scale-105 transition-transform"
+                      className="mt-2 px-6 py-3 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm rounded-xl md:rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all"
                     >
                       MEET THE TEAM ➔
                     </Link>
