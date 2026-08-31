@@ -91,8 +91,67 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#09090B] text-[#FAFAFA] font-sans selection:bg-[#FFC800] selection:text-black">
-      {/* DYNAMIC HOMEPAGE CONTENT */}
       <main className="max-w-[1100px] mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col gap-8 md:gap-12">
+        
+        {/* 🌟 0. TOP HERO SPOTLIGHT BANNER */}
+        <section className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-[#FFC800]/30 bg-gradient-to-r from-[#141417] via-[#1f1f24] to-[#141417] p-6 md:p-10 shadow-2xl">
+          {/* Ambient Background Glow */}
+          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-[#FFC800]/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-red-500/10 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col items-center md:items-start text-center md:text-left gap-3 max-w-[650px]">
+              <div className="flex items-center gap-2">
+                <span className="animate-pulse flex h-2 w-2 rounded-full bg-red-500" />
+                <span className="text-[10px] md:text-xs font-black tracking-widest text-[#FFC800] uppercase bg-[#FFC800]/10 border border-[#FFC800]/20 px-3 py-1 rounded-full">
+                  🔥 SPECIAL EPISODE DROP
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-white leading-tight">
+                Raw Comedy & Unfiltered Banter
+              </h1>
+
+              <p className="text-xs sm:text-sm text-[#A1A1AA] leading-relaxed max-w-[550px]">
+                Catch the latest unscripted Punjabi laughs, wild studio stories, and chaotic guest roasts streaming across all platforms.
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
+                <a
+                  href="#webplayer"
+                  className="px-6 py-3 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm rounded-xl md:rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2"
+                >
+                  STREAM LATEST EPISODE ▶
+                </a>
+                <Link
+                  href="/game"
+                  className="px-5 py-3 bg-[#09090B] text-[#FAFAFA] border border-[#27272A] hover:border-[#FFC800] font-bold text-xs md:text-sm rounded-xl md:rounded-2xl hover:scale-105 transition-all"
+                >
+                  🎮 PLAY MMA ARCADE
+                </Link>
+              </div>
+            </div>
+
+            {/* Right-Side Visual Accent / 16:9 Thumbnail Preview */}
+            <div className="w-full md:w-[360px] aspect-video rounded-xl md:rounded-2xl bg-[#09090B] border border-[#27272A] overflow-hidden relative shadow-lg shrink-0 group">
+              <img
+                src="/hosts-group.png"
+                alt="Saade Aala Radio Special Spotlight"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                <span className="text-xs font-black text-white drop-shadow">
+                  🎙️ New Episode Drops Every Friday
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* DYNAMIC HOMEPAGE SECTIONS */}
         {sections.map((section) => {
           if (!section.enabled) return null;
 
@@ -101,15 +160,16 @@ export default function HomePage() {
             case "webplayer":
               return (
                 <section
+                  id="webplayer"
                   key={section.id}
-                  className="bg-[#141417] border border-[#27272A] p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row gap-6 items-center"
+                  className="bg-[#141417] border border-[#27272A] p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl flex flex-col md:flex-row gap-6 items-center scroll-mt-24"
                 >
                   <div className="flex-1 flex flex-col gap-3 w-full">
                     <span className="text-[10px] md:text-xs font-black text-[#FFC800] tracking-widest uppercase flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                       NOW STREAMING
                     </span>
-                    <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">Latest Podcast Episode</h1>
+                    <h2 className="text-2xl md:text-4xl font-black text-white leading-tight">Latest Podcast Episode</h2>
                     <p className="text-xs md:text-sm text-[#A1A1AA] leading-relaxed">
                       Join Harshdeep, Sarabjeet, and Sandeep as they dive into raw Punjabi banter, viral stories, and unscripted laughs.
                     </p>
@@ -241,53 +301,57 @@ export default function HomePage() {
               );
             }
 
-            /* 3. HOSTS PHOTO WITH SEAMLESS NETFLIX-STYLE FADE */
+            /* 3. HOSTS PHOTO (TEXT ON LEFT, NETFLIX-FADE IMAGE ON RIGHT) */
             case "hosts_photo":
               return (
                 <section
                   key={section.id}
-                  className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-[#09090B] border border-[#27272A] min-h-[340px] md:min-h-[440px] flex items-end p-6 md:p-10 shadow-2xl group"
+                  className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-[#141417] border border-[#27272A] min-h-[360px] md:min-h-[460px] flex flex-col md:flex-row items-center justify-between shadow-2xl group"
                 >
-                  {/* Background Image Container with Gradient Fade Overlay */}
-                  <div className="absolute inset-0 z-0 overflow-hidden">
+                  {/* 📝 LEFT SIDE: TEXT & CTA */}
+                  <div className="relative z-20 flex-1 flex flex-col items-start gap-4 p-6 md:p-12 max-w-[560px]">
+                    <span className="text-[10px] md:text-xs font-black text-[#FFC800] bg-[#FFC800]/10 px-3.5 py-1 rounded-full border border-[#FFC800]/30 tracking-widest uppercase">
+                      THE TRIO BEHIND THE MIC
+                    </span>
+
+                    <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-white leading-tight drop-shadow-md">
+                      Meet Harshdeep, Sarabjeet & Sandeep
+                    </h2>
+
+                    <p className="text-xs sm:text-sm text-[#A1A1AA] leading-relaxed">
+                      Unfiltered banter, viral roasts, and unscripted Punjabi comedy. Get to know the personalities, signature quotes, and ask them questions directly.
+                    </p>
+
+                    <Link
+                      href="/team"
+                      className="mt-2 px-6 py-3.5 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm rounded-xl md:rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2"
+                    >
+                      MEET THE TEAM <span>➔</span>
+                    </Link>
+                  </div>
+
+                  {/* 🎬 RIGHT SIDE: NETFLIX-STYLE SEAMLESS FADE IMAGE */}
+                  <div className="w-full md:w-1/2 h-[260px] md:h-full md:absolute md:right-0 md:top-0 md:bottom-0 overflow-hidden z-10">
                     <img
                       src="/hosts-group.png"
-                      alt="Harshdeep, Sarabjeet, and Sandeep - Saade Aala Radio"
-                      className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      alt="Harshdeep, Sarabjeet, and Sandeep"
+                      className="w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                       style={{
-                        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%)",
-                        maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%)",
+                        WebkitMaskImage:
+                          "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%), linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)",
+                        maskImage:
+                          "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%), linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)",
+                        WebkitMaskComposite: "destination-in",
+                        maskComposite: "intersect",
                       }}
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = "none";
                       }}
                     />
 
-                    {/* Ambient Dark Gradients to soften top, bottom, and side edges */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#09090B]/90 via-transparent to-[#09090B]/90" />
-                  </div>
-
-                  {/* Foreground Content */}
-                  <div className="relative z-10 flex flex-col items-start gap-3 max-w-[550px]">
-                    <span className="text-[10px] md:text-xs font-black text-[#FFC800] bg-[#FFC800]/10 px-3.5 py-1 rounded-full border border-[#FFC800]/30 tracking-widest uppercase">
-                      THE TRIO BEHIND THE MIC
-                    </span>
-
-                    <h2 className="text-2xl md:text-4xl font-black text-white leading-tight drop-shadow-lg">
-                      Meet Harshdeep, Sarabjeet & Sandeep
-                    </h2>
-
-                    <p className="text-xs md:text-sm text-[#D4D4D8] leading-relaxed drop-shadow">
-                      Get to know the personalities, signature quotes, and ask them questions directly in our community Q&A.
-                    </p>
-
-                    <Link
-                      href="/team"
-                      className="mt-2 px-6 py-3 bg-[#FFC800] text-black font-extrabold text-xs md:text-sm rounded-xl md:rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all"
-                    >
-                      MEET THE TEAM ➔
-                    </Link>
+                    {/* Ambient Overlays for Edge Blending */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#141417] via-transparent to-transparent md:hidden" />
+                    <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-[#141417] via-transparent to-transparent" />
                   </div>
                 </section>
               );
