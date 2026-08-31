@@ -4,6 +4,13 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 
 // --- INTERFACES ---
+export interface ShowcaseBannerItem {
+  id: string;
+  imageUrl: string;
+  linkUrl: string;
+  altText: string;
+}
+
 export interface SocialLink {
   id: string;
   platform: string;
@@ -84,6 +91,9 @@ export interface PageSEO {
 export interface MasterSiteConfig {
   headerLogoUrl: string;
   footerLogoUrl: string;
+  youtubeChannelId: string;
+  spotifyRssUrl: string;
+  showcaseBanners: ShowcaseBannerItem[];
   homeSocials: SocialLink[];
   episodeBanners: EpisodeBanner[];
   homepageTeamPhoto: {
@@ -113,6 +123,22 @@ export interface MasterSiteConfig {
 const DEFAULT_CONFIG: MasterSiteConfig = {
   headerLogoUrl: "/logo-placeholder.png",
   footerLogoUrl: "/logo-placeholder.png",
+  youtubeChannelId: "UC2iOVDWKiddCPKN89wBUhGg",
+  spotifyRssUrl: "https://anchor.fm/s/e8ade3f8/podcast/rss",
+  showcaseBanners: [
+    {
+      id: "banner-1",
+      imageUrl: "/showcase-banner.png",
+      linkUrl: "https://www.youtube.com/@SaadeAalaRadio",
+      altText: "Saade Aala Radio Comedy Special Showcase",
+    },
+    {
+      id: "banner-2",
+      imageUrl: "/hosts-group.png",
+      linkUrl: "/game",
+      altText: "Play MMA Arcade Game",
+    },
+  ],
   homeSocials: [
     { id: "s-1", platform: "YouTube", url: "https://www.youtube.com/@SaadeAalaRadio" },
     { id: "s-2", platform: "Spotify", url: "https://open.spotify.com/show/3voSKp0xDQSbzMNVxf239H" },
@@ -230,6 +256,7 @@ export default function MasterAdminCMS() {
           setConfig({
             ...DEFAULT_CONFIG,
             ...parsed,
+            showcaseBanners: parsed.showcaseBanners || DEFAULT_CONFIG.showcaseBanners,
             homeSocials: parsed.homeSocials || DEFAULT_CONFIG.homeSocials,
             episodeBanners: parsed.episodeBanners || DEFAULT_CONFIG.episodeBanners,
             hosts: parsed.hosts || DEFAULT_CONFIG.hosts,
@@ -379,7 +406,7 @@ export default function MasterAdminCMS() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-[#09090B] border border-[#27272A] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFC800]"
           />
-          <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl">
+          <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 transition-all">
             UNLOCK ALL CONTROLS 🔐
           </button>
         </form>
@@ -395,20 +422,20 @@ export default function MasterAdminCMS() {
         <header className="flex items-center justify-between py-3 border-b border-[#27272A]">
           <div>
             <span className="text-lg font-black text-[#FFC800]">SAADE AALA MASTER CMS</span>
-            <span className="text-xs text-[#A1A1AA] block">Full Website & SEO Management Engine</span>
+            <span className="text-xs text-[#A1A1AA] block">Full Website & Live Multi-Banner Management Engine</span>
           </div>
-          <Link href="/" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800]">
+          <Link href="/" className="text-xs font-semibold text-[#A1A1AA] border border-[#27272A] px-4 py-1.5 rounded-full bg-white/5 hover:border-[#FFC800] transition-colors">
             ← LIVE WEBSITE
           </Link>
         </header>
 
         {saveMessage && (
-          <div className="bg-[#FFC800]/20 border border-[#FFC800] text-[#FFC800] text-xs font-bold p-3 rounded-xl text-center">
+          <div className="bg-[#FFC800]/20 border border-[#FFC800] text-[#FFC800] text-xs font-bold p-3 rounded-xl text-center animate-in fade-in duration-200">
             {saveMessage}
           </div>
         )}
 
-        {/* Master Navigation */}
+        {/* Master Navigation Tabs */}
         <div className="grid grid-cols-6 gap-1 bg-[#141417] p-1.5 rounded-2xl border border-[#27272A] text-center">
           {[
             { id: "logos", label: "🎨 Logos" },
@@ -441,7 +468,6 @@ export default function MasterAdminCMS() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
               {/* Header Logo File Picker */}
               <div className="bg-[#09090B] border border-[#27272A] p-5 rounded-2xl flex flex-col gap-4">
                 <span className="text-xs font-bold text-white uppercase tracking-wider">Header Logo</span>
@@ -503,16 +529,165 @@ export default function MasterAdminCMS() {
                   />
                 </div>
               </div>
-
             </div>
           </section>
         )}
 
-        {/* TAB 1: HOMEPAGE MANAGER */}
+        {/* TAB 1: HOMEPAGE MANAGER (SHOWCASE MULTI-BANNERS & LIVE RSS) */}
         {activeTab === "home" && (
           <section className="flex flex-col gap-6">
             
-            {/* Social Media Links */}
+            {/* 🌟 1. TOP MULTI-BANNER SHOWCASE CAROUSEL CMS */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">🖼️ Top Showcase Multi-Banners</h2>
+                  <p className="text-xs text-[#A1A1AA] mt-0.5">Manage full-width showcase banners with clickable destination links.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newBanner: ShowcaseBannerItem = {
+                      id: `sb-${Date.now()}`,
+                      imageUrl: "/showcase-banner.png",
+                      linkUrl: "https://www.youtube.com/@SaadeAalaRadio",
+                      altText: "New Showcase Banner",
+                    };
+                    saveConfig(
+                      { ...config, showcaseBanners: [...(config.showcaseBanners || []), newBanner] },
+                      "✨ Showcase banner added!"
+                    );
+                  }}
+                  className="px-4 py-1.5 bg-[#FFC800] text-black text-xs font-bold rounded-xl shadow hover:scale-105 transition-all"
+                >
+                  + Add Showcase Banner
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {(config.showcaseBanners || []).map((sb, idx) => (
+                  <div key={sb.id} className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-[#FFC800]">SLIDE #{idx + 1}</span>
+                      <button
+                        onClick={() => {
+                          const updated = config.showcaseBanners.filter((b) => b.id !== sb.id);
+                          saveConfig({ ...config, showcaseBanners: updated }, "🗑️ Showcase banner removed!");
+                        }}
+                        className="text-xs text-red-400 font-bold hover:underline"
+                      >
+                        Delete Slide
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-[#A1A1AA] font-bold">Image URL or Local Path:</span>
+                        <input
+                          type="text"
+                          value={sb.imageUrl}
+                          onChange={(e) => {
+                            const updated = [...config.showcaseBanners];
+                            updated[idx].imageUrl = e.target.value;
+                            saveConfig({ ...config, showcaseBanners: updated }, "Image URL updated!");
+                          }}
+                          placeholder="/showcase-banner.png or https://..."
+                          className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-[#A1A1AA] font-bold">Click Destination URL (Optional):</span>
+                        <input
+                          type="text"
+                          value={sb.linkUrl}
+                          onChange={(e) => {
+                            const updated = [...config.showcaseBanners];
+                            updated[idx].linkUrl = e.target.value;
+                            saveConfig({ ...config, showcaseBanners: updated }, "Destination link updated!");
+                          }}
+                          placeholder="e.g. /game or https://youtube.com/..."
+                          className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Direct Image File Uploader */}
+                    <div className="flex items-center gap-3 bg-[#141417] border border-[#27272A] p-3 rounded-xl">
+                      <span className="text-[10px] font-bold text-[#FFC800]">Upload Banner Image File:</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const updated = [...config.showcaseBanners];
+                              updated[idx].imageUrl = reader.result as string;
+                              saveConfig({ ...config, showcaseBanners: updated }, "Banner image uploaded!");
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="text-[10px] text-[#A1A1AA] w-full"
+                      />
+                    </div>
+
+                    <input
+                      type="text"
+                      value={sb.altText}
+                      onChange={(e) => {
+                        const updated = [...config.showcaseBanners];
+                        updated[idx].altText = e.target.value;
+                        saveConfig({ ...config, showcaseBanners: updated }, "Alt text updated!");
+                      }}
+                      placeholder="Banner Alt Description (SEO & Accessibility)"
+                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 🔴 2. AUTOMATED YOUTUBE & SPOTIFY RSS SYNC SETTINGS */}
+            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
+              <div>
+                <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">⚡ Live Podcast Auto-Sync Feeds</h2>
+                <p className="text-xs text-[#A1A1AA] mt-0.5">The site continuously polls these endpoints to auto-update new episodes.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
+                  <span className="text-[10px] font-bold text-[#FFC800]">YouTube Channel ID</span>
+                  <input
+                    type="text"
+                    value={config.youtubeChannelId || "UC2iOVDWKiddCPKN89wBUhGg"}
+                    onChange={(e) => {
+                      saveConfig({ ...config, youtubeChannelId: e.target.value }, "YouTube Channel ID updated!");
+                    }}
+                    placeholder="UC2iOVDWKiddCPKN89wBUhGg"
+                    className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                  />
+                  <span className="text-[10px] text-[#71717A]">Used by /api/youtube to fetch live videos.</span>
+                </div>
+
+                <div className="bg-[#09090B] border border-[#27272A] p-4 rounded-2xl flex flex-col gap-2">
+                  <span className="text-[10px] font-bold text-[#FFC800]">Spotify / Anchor RSS Feed URL</span>
+                  <input
+                    type="text"
+                    value={config.spotifyRssUrl || "https://anchor.fm/s/e8ade3f8/podcast/rss"}
+                    onChange={(e) => {
+                      saveConfig({ ...config, spotifyRssUrl: e.target.value }, "Spotify RSS Feed URL updated!");
+                    }}
+                    placeholder="https://anchor.fm/s/.../podcast/rss"
+                    className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
+                  />
+                  <span className="text-[10px] text-[#71717A]">Used by /api/spotify for audio playback.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Social Media Links */}
             <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Homepage Social Media Links</h2>
@@ -521,7 +696,7 @@ export default function MasterAdminCMS() {
                     const newSocial: SocialLink = { id: `s-${Date.now()}`, platform: "Instagram", url: "https://instagram.com" };
                     saveConfig({ ...config, homeSocials: [...(config.homeSocials || []), newSocial] }, "Social link added!");
                   }}
-                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
+                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl shadow hover:scale-105 transition-all"
                 >
                   + Add Social Link
                 </button>
@@ -557,7 +732,7 @@ export default function MasterAdminCMS() {
                         const updated = config.homeSocials.filter((s) => s.id !== social.id);
                         saveConfig({ ...config, homeSocials: updated }, "Social deleted!");
                       }}
-                      className="text-xs text-red-400 font-bold px-2"
+                      className="text-xs text-red-400 font-bold px-2 hover:underline"
                     >
                       Delete
                     </button>
@@ -566,10 +741,10 @@ export default function MasterAdminCMS() {
               </div>
             </div>
 
-            {/* 16:9 Banner Slides with Image Uploader */}
+            {/* 4. 16:9 Banner Slides */}
             <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">16:9 Episode Banner Slides</h2>
+                <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">16:9 Episode Banner Slides (Manual CMS Override)</h2>
                 <button
                   onClick={() => {
                     const newB: EpisodeBanner = {
@@ -583,7 +758,7 @@ export default function MasterAdminCMS() {
                     };
                     saveConfig({ ...config, episodeBanners: [...(config.episodeBanners || []), newB] }, "Banner added!");
                   }}
-                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
+                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl shadow hover:scale-105 transition-all"
                 >
                   + Add Banner Slide
                 </button>
@@ -599,7 +774,7 @@ export default function MasterAdminCMS() {
                           const updated = config.episodeBanners.filter((item) => item.id !== b.id);
                           saveConfig({ ...config, episodeBanners: updated }, "Banner deleted!");
                         }}
-                        className="text-xs text-red-400 font-bold"
+                        className="text-xs text-red-400 font-bold hover:underline"
                       >
                         Delete
                       </button>
@@ -617,7 +792,6 @@ export default function MasterAdminCMS() {
                       placeholder="Title"
                     />
 
-                    {/* 16:9 Thumbnail File Picker */}
                     <div className="flex items-center gap-3 bg-[#141417] border border-[#27272A] p-3 rounded-xl">
                       <span className="text-[10px] font-bold text-[#FFC800]">16:9 Image:</span>
                       <input
@@ -638,77 +812,8 @@ export default function MasterAdminCMS() {
                         className="text-[10px] text-[#A1A1AA] w-full"
                       />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        value={b.altText}
-                        onChange={(e) => {
-                          const updated = [...config.episodeBanners];
-                          updated[idx].altText = e.target.value;
-                          saveConfig({ ...config, episodeBanners: updated }, "Banner updated!");
-                        }}
-                        className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
-                        placeholder="Alt Text"
-                      />
-                      <input
-                        type="text"
-                        value={b.metaData}
-                        onChange={(e) => {
-                          const updated = [...config.episodeBanners];
-                          updated[idx].metaData = e.target.value;
-                          saveConfig({ ...config, episodeBanners: updated }, "Banner updated!");
-                        }}
-                        className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
-                        placeholder="Image Metadata"
-                      />
-                    </div>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Homepage Team Photo */}
-            <div className="bg-[#141417] border border-[#27272A] p-6 rounded-3xl flex flex-col gap-3">
-              <h2 className="text-xs font-black text-[#FFC800] uppercase tracking-wider">Homepage Team Group Photo</h2>
-              <input
-                type="text"
-                value={config.homepageTeamPhoto?.titleText || ""}
-                onChange={(e) => {
-                  const updated = { ...config.homepageTeamPhoto, titleText: e.target.value };
-                  saveConfig({ ...config, homepageTeamPhoto: updated }, "Title text updated!");
-                }}
-                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
-                placeholder="Section Tag Title"
-              />
-              <input
-                type="text"
-                value={config.homepageTeamPhoto?.altText || ""}
-                onChange={(e) => {
-                  const updated = { ...config.homepageTeamPhoto, altText: e.target.value };
-                  saveConfig({ ...config, homepageTeamPhoto: updated }, "Alt text updated!");
-                }}
-                className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
-                placeholder="Photo Alt Text"
-              />
-              <div className="flex items-center gap-3 bg-[#09090B] border border-[#27272A] p-3 rounded-xl">
-                <span className="text-xs font-bold text-[#FFC800]">Upload Photo:</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const updated = { ...config.homepageTeamPhoto, url: reader.result as string };
-                        saveConfig({ ...config, homepageTeamPhoto: updated }, "Group photo updated!");
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="text-xs text-[#A1A1AA]"
-                />
               </div>
             </div>
 
@@ -805,66 +910,6 @@ export default function MasterAdminCMS() {
                         className="text-xs text-[#A1A1AA]"
                       />
                     </div>
-
-                    {/* Host Social Media Links */}
-                    <div className="pt-2 border-t border-[#27272A] flex flex-col gap-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-extrabold text-[#FFC800] uppercase">{host.name}'s Social Links</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newS: SocialLink = { id: `hs-${Date.now()}`, platform: "Instagram", url: "https://instagram.com" };
-                            const updatedHost = { ...host, socials: [...(host.socials || []), newS] };
-                            const updated = { ...config.hosts, [key]: updatedHost };
-                            saveConfig({ ...config, hosts: updated }, "Social link added!");
-                          }}
-                          className="px-2 py-0.5 bg-[#FFC800] text-black text-[10px] font-bold rounded-lg"
-                        >
-                          + Add Social Link
-                        </button>
-                      </div>
-
-                      {(host.socials || []).map((s, sIdx) => (
-                        <div key={s.id} className="flex gap-2 items-center">
-                          <input
-                            type="text"
-                            value={s.platform}
-                            onChange={(e) => {
-                              const newSocials = [...host.socials];
-                              newSocials[sIdx].platform = e.target.value;
-                              const updated = { ...config.hosts, [key]: { ...host, socials: newSocials } };
-                              saveConfig({ ...config, hosts: updated }, "Social platform updated!");
-                            }}
-                            className="bg-[#141417] border border-[#27272A] rounded-lg p-1.5 text-xs text-white w-1/3"
-                            placeholder="Platform"
-                          />
-                          <input
-                            type="text"
-                            value={s.url}
-                            onChange={(e) => {
-                              const newSocials = [...host.socials];
-                              newSocials[sIdx].url = e.target.value;
-                              const updated = { ...config.hosts, [key]: { ...host, socials: newSocials } };
-                              saveConfig({ ...config, hosts: updated }, "Social URL updated!");
-                            }}
-                            className="bg-[#141417] border border-[#27272A] rounded-lg p-1.5 text-xs text-white w-full"
-                            placeholder="URL"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newSocials = host.socials.filter((item) => item.id !== s.id);
-                              const updated = { ...config.hosts, [key]: { ...host, socials: newSocials } };
-                              saveConfig({ ...config, hosts: updated }, "Social link deleted!");
-                            }}
-                            className="text-xs text-red-400 font-bold px-1"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
                   </div>
                 );
               })}
@@ -882,7 +927,7 @@ export default function MasterAdminCMS() {
                         const updated = config.questions.filter((item) => item.id !== q.id);
                         saveConfig({ ...config, questions: updated }, "Question deleted!");
                       }}
-                      className="text-xs text-red-400 font-bold"
+                      className="text-xs text-red-400 font-bold hover:underline"
                     >
                       Delete
                     </button>
@@ -903,7 +948,7 @@ export default function MasterAdminCMS() {
                       const updated = config.questions.map((item) => (item.id === q.id ? { ...item, isApproved: !item.isApproved } : item));
                       saveConfig({ ...config, questions: updated }, "Approval status toggled!");
                     }}
-                    className={`py-1.5 rounded-xl text-xs font-bold ${q.isApproved ? "bg-green-500/20 text-green-400" : "bg-[#FFC800] text-black"}`}
+                    className={`py-1.5 rounded-xl text-xs font-bold transition-all ${q.isApproved ? "bg-green-500/20 text-green-400" : "bg-[#FFC800] text-black"}`}
                   >
                     {q.isApproved ? "✓ Approved (Click to Hide)" : "Approve & Publish ➔"}
                   </button>
@@ -1043,24 +1088,6 @@ export default function MasterAdminCMS() {
                 />
               </div>
 
-              {/* Story Thumbnail SEO */}
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  placeholder="Thumbnail Alt Text"
-                  value={thumbnailAlt}
-                  onChange={(e) => setThumbnailAlt(e.target.value)}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Thumbnail Metadata"
-                  value={thumbnailMeta}
-                  onChange={(e) => setThumbnailMeta(e.target.value)}
-                  className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
-                />
-              </div>
-
               <input
                 type="text"
                 placeholder="Story SEO Meta Title"
@@ -1069,7 +1096,7 @@ export default function MasterAdminCMS() {
                 className="bg-[#09090B] border border-[#27272A] rounded-xl p-2.5 text-xs text-white"
               />
 
-              <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-lg">
+              <button type="submit" className="w-full py-3 bg-[#FFC800] text-black font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 transition-all">
                 PUBLISH STORY 🚀
               </button>
             </form>
@@ -1077,7 +1104,7 @@ export default function MasterAdminCMS() {
           </section>
         )}
 
-        {/* TAB 4: ABOUT TIMELINE & MILESTONE PHOTO UPLOADER */}
+        {/* TAB 4: ABOUT TIMELINE & ACHIEVEMENTS */}
         {activeTab === "about" && (
           <section className="flex flex-col gap-6">
             
@@ -1129,7 +1156,7 @@ export default function MasterAdminCMS() {
                     };
                     saveConfig({ ...config, milestones: [...(config.milestones || []), newM] }, "Milestone added!");
                   }}
-                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl"
+                  className="px-3 py-1 bg-[#FFC800] text-black text-xs font-bold rounded-xl shadow hover:scale-105 transition-all"
                 >
                   + Add Milestone
                 </button>
@@ -1144,7 +1171,7 @@ export default function MasterAdminCMS() {
                         const updated = config.milestones.filter((m) => m.id !== ms.id);
                         saveConfig({ ...config, milestones: updated }, "Milestone deleted!");
                       }}
-                      className="text-xs text-red-400 font-bold"
+                      className="text-xs text-red-400 font-bold hover:underline"
                     >
                       Delete
                     </button>
@@ -1181,31 +1208,6 @@ export default function MasterAdminCMS() {
                         }
                       }}
                       className="text-xs text-[#A1A1AA]"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      value={ms.imageAltText || ""}
-                      onChange={(e) => {
-                        const updated = [...config.milestones];
-                        updated[idx].imageAltText = e.target.value;
-                        saveConfig({ ...config, milestones: updated }, "Alt text updated!");
-                      }}
-                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
-                      placeholder="Image Alt Text"
-                    />
-                    <input
-                      type="text"
-                      value={ms.imageMetaData || ""}
-                      onChange={(e) => {
-                        const updated = [...config.milestones];
-                        updated[idx].imageMetaData = e.target.value;
-                        saveConfig({ ...config, milestones: updated }, "Metadata updated!");
-                      }}
-                      className="bg-[#141417] border border-[#27272A] rounded-xl p-2 text-xs text-white"
-                      placeholder="Image Metadata"
                     />
                   </div>
                 </div>
